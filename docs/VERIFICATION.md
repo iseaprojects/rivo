@@ -856,8 +856,8 @@ it does not add behaviour.
 - **Permissions.** The app does not request `REQUEST_INSTALL_PACKAGES`: the update checker
   opens the release page. `SYSTEM_ALERT_WINDOW` is declared only as the opt-in that lets a
   Tasker broadcast start the UI from the background (D47).
-- **Documentation.** README, ARCHITECTURE, DECISIONS (D1-D48), PARITY, EXTRACTORS,
-  CONTRIBUTING, SECURITY and this file describe the shipped behaviour; the per-phase
-  walkthroughs above are the manual checklist.
+- **Documentation.** README (English and Spanish), ARCHITECTURE, DECISIONS (D1-D48), PARITY,
+  EXTRACTORS, CONTRIBUTING, SECURITY and this file describe the shipped behaviour; the
+  per-phase walkthroughs above are the manual checklist.
 - **Known gaps.** The "Not verified" lists per phase name what was not exercised; none of
   them is a screen that is missing or stubbed.
