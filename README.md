@@ -31,7 +31,7 @@ background, survives a restart, and can be paused, resumed or cancelled. Finishe
 your Movies or Music folder.
 
 Everything you mark — recents, saved videos, playlists, subscriptions — stays on the phone. There
-is no account to create, and nothing is sent anywhere.
+is no account to create and no telemetry.
 
 When you want to change something, the settings are ordinary menus too: themes, language, page
 size, cookies, where files go.

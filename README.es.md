@@ -31,7 +31,7 @@ sobrevive a un reinicio y se puede pausar, reanudar o cancelar. Al terminar, el 
 tu carpeta de Vídeos o Música.
 
 Todo lo que marcas —recientes, vídeos guardados, listas, suscripciones— se queda en el teléfono.
-No hay cuenta que crear y no se envía nada a ningún lado.
+No hay cuenta que crear ni telemetría.
 
 Y cuando quieres cambiar algo, los ajustes también son menús normales: temas, idioma, tamaño de
 página, cookies, dónde se guardan los archivos.
