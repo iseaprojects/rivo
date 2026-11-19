@@ -69,9 +69,10 @@ descargas que sobreviven al cierre de la app, una sesión multimedia y vídeo DA
 | **Actualizaciones** | Chequeo de releases de GitHub con comparación de versiones punteadas, por canal (`stable`/prerelease), sin instalar APK: abre la página del release (D45) |
 
 ```
-Tu feed · Buscar · Feed de suscripciones · Tendencias · Ver más tarde · Vídeos que te gustaron
-Historial · Clips · Listas · Listas propias · Vídeos guardados · Recientes
-Canales · Varios
+Tu Feed · Buscar · Feed de Suscripciones · Tendencias · Ver Más Tarde · Vídeos que me gustan
+Historial de Reproducción · Clips · Listas de Reproducción
+Listas de Reproducción Personalizadas · Vídeos guardados · Recientes
+Canales · Misceláneo
 ```
 
 ## Compilar
