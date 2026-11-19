@@ -535,7 +535,6 @@
     "TXT_ANDROID_UPDATE_CURRENT": "Up to date",
     "TXT_ANDROID_UPDATE_FAILED": "Check failed",
     "TXT_ANDROID_UPDATE_IDLE": "Not checked yet",
-    "TXT_ANDROID_UPDATE_CURRENT_FMT": "Rivo %1$s is up to date",
     "TXT_ANDROID_UPDATE_CHECK": "Check again",
     "TXT_ANDROID_UPDATE_AVAILABLE_FMT": "Rivo %1$s is available",
     "TXT_ANDROID_UPDATE_UP_TO_DATE_FMT": "Up to date with %1$s",

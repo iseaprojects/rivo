@@ -17,6 +17,7 @@ out/
 *.ap_
 *.jks
 *.keystore
+keystore.properties
 secrets.properties
 *.log
 *.hprof

@@ -482,7 +482,6 @@
     "TXT_ANDROID_UPDATE_CURRENT": "Actualizado",
     "TXT_ANDROID_UPDATE_FAILED": "Error al comprobar",
     "TXT_ANDROID_UPDATE_IDLE": "Sin comprobar",
-    "TXT_ANDROID_UPDATE_CURRENT_FMT": "Rivo %1$s está actualizado",
     "TXT_ANDROID_UPDATE_CHECK": "Comprobar de nuevo",
     "TXT_ANDROID_UPDATE_AVAILABLE_FMT": "Rivo %1$s está disponible",
     "TXT_ANDROID_UPDATE_UP_TO_DATE_FMT": "Al día con %1$s",

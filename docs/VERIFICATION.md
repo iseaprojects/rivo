@@ -5,8 +5,9 @@ Everything below was run on Windows with JDK 17.0.19, the Android SDK at `C:\And
 and AGP 9.5.1. No part of the project is unbuilt or stubbed.
 
 > F1-F7 were verified while the project was still called yt-x for Android. Quoted tool output
-> keeps the identifiers of the build that produced it (for example `application-label:'yt-x'`);
-> commands, package names, paths and links use the current `Rivo` identifiers.
+> keeps the identifiers of the build that produced it (for example the old
+> `dev.ytx.android.debug` package id); commands, package names, paths and links use the
+> current `Rivo` identifiers.
 
 ## Build matrix
 
@@ -28,7 +29,7 @@ package: name='io.github.iseaprojects.rivo.debug' versionCode='807002'
 compileSdkVersion='37' compileSdkVersionCodename='17'
 minSdkVersion:'26'
 targetSdkVersion:'37'
-application-label:'yt-x'
+application-label:'Rivo'
 locales: '--_--' 'es' 'pt' 'pt-BR'
 ```
 
@@ -836,9 +837,21 @@ it does not add behaviour.
   the about screen and README as the credit for the port.
 - **Tests.** 344 unit test cases in 39 suites, 0 failures, 7 opt-in live tests skipped
   (`RIVO_LIVE=1`), in both flavors. `lintFastDebug` reports 0 errors and 19 justified warnings.
+- **Strings.** `tools/check_strings.py` reports 419 referenced, 542 defined, 0 missing; the
+  three lang packs parse as JSON.
+- **Install.** `0.8.7-rivo.2-fast-debug` and `0.8.7-rivo.2-ytdlp-debug` both install
+  and launch as `io.github.iseaprojects.rivo.debug` on Pixel_8_API_36; the root breadcrumb
+  reads "Rivo" and `rivo://recent`, `rivo://config`, `rivo://misc` and
+  `rivo://search?q=…` each push the expected frame. The Tasker broadcast opens the router
+  directly when "Display over other apps" is granted and otherwise posts the
+  `rivo://…` notification, as designed (D47).
+- **Update endpoint.** `api.github.com/repos/iseaprojects/rivo/releases` answers 404 until
+  that repository exists, so the Update screen reports `Check failed` on an unpublished
+  checkout. A repository with no releases answers `[]` and reads "Up to date".
 - **Artifacts.** `app-fast-debug.apk` 28.12 MB, `app-ytdlp-debug.apk` 105.50 MB,
   `app-fast-release-unsigned.apk` 3.82 MB (R8 + resource shrinking). Signing material is read
-  from the environment (README); no keystore is in the tree.
+  from the environment or an ignored `keystore.properties` through `tools/release.sh`; no
+  keystore is in the tree.
 - **Permissions.** The app does not request `REQUEST_INSTALL_PACKAGES`: the update checker
   opens the release page. `SYSTEM_ALERT_WINDOW` is declared only as the opt-in that lets a
   Tasker broadcast start the UI from the background (D47).

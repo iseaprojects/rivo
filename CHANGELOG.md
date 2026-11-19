@@ -31,7 +31,8 @@ First release under the Rivo name. Functionally it is the completed F1-F8 Androi
 - Application id is now `io.github.iseaprojects.rivo`; the deep-link scheme is `rivo://`.
 - Default download roots are `Movies/Rivo`, `Music/Rivo` and `Download/Rivo`.
 - Update checks read this repository's releases instead of the upstream ones; the upstream
-  repository stays credited in the about screen.
+  repository stays credited in the about screen. A tag like `0.8.7-rivo.10` now sorts above
+  `0.8.7-rivo.9`, and a repository with no releases reports "Up to date" instead of a failure.
 
 ### Fixed during the F7/F8 verification
 

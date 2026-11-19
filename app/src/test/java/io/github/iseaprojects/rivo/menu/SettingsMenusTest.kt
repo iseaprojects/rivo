@@ -43,7 +43,6 @@ class SettingsMenusTest {
         "TXT_ANDROID_EXTRACTOR_FAST_ONLY" to "fast only",
         "TXT_ANDROID_OFF" to "off",
         "TXT_ANDROID_UPDATE_IDLE" to "idle",
-        "TXT_ANDROID_UPDATE_CURRENT_FMT" to "ports %1\$s",
         "TXT_ANDROID_EXTENSION" to "extension",
         "TXT_ANDROID_COMMAND_MISSING" to "missing",
         "TXT_ANDROID_COMMANDS_EMPTY_HINT" to "create one",

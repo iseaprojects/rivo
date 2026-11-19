@@ -1166,10 +1166,7 @@ object BuiltInMenus {
                         MenuDsl.info(
                             id = "update.idle",
                             labelKey = "TXT_ANDROID_UPDATE_IDLE",
-                            detail = ctx.strings.format(
-                                "TXT_ANDROID_UPDATE_CURRENT_FMT",
-                                updates.currentVersion,
-                            ),
+                            detail = updates.currentVersion,
                         ),
                     )
                 }

@@ -17,6 +17,29 @@ wrapper. `local.properties` is the only machine-specific file.
 The `fast` flavor uses NewPipeExtractor only; `ytdlp` adds youtubedl-android (CPython and
 aria2), which is why its APK is much larger.
 
+## Publishing
+
+The repository is self-contained; `main` holds the import commit. To publish a mirror and
+push it:
+
+```bash
+gh repo create iseaprojects/rivo --public --source . --remote origin --push
+```
+
+A release is tagged with the exact string in `app/build.gradle.kts` (`appVersion`), so the
+in-app update checker compares like for like:
+
+```bash
+git tag -a v0.8.7-rivo.2 -m "Rivo 0.8.7-rivo.2"
+git push origin main --tags
+tools/release.sh fast
+gh release create v0.8.7-rivo.2 app/build/outputs/apk/fast/release/*.apk \
+  --title "Rivo 0.8.7-rivo.2" --notes-file CHANGELOG.md
+```
+
+Signing keys stay in `keystore.properties` or the `RIVO_*` environment variables; both are
+excluded from git.
+
 ## Before sending a change
 
 Run the same gates CI runs:

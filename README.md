@@ -130,6 +130,10 @@ RIVO_KEYSTORE=/path/release.jks RIVO_KEYSTORE_PASSWORD=… RIVO_KEY_ALIAS=… RI
   ./gradlew :app:assembleFastRelease
 ```
 
+`tools/release.sh` wraps that and reads the same four values from an ignored
+`keystore.properties` when the variables are unset (`tools/release.sh ytdlp`,
+`tools/release.sh fast --unsigned` for a check without keys).
+
 ### Flavors
 
 | Flavor | Extraction | Use case |
@@ -185,8 +189,8 @@ MainActivity ──intent──▶ LaunchSpecParser ──▶ LaunchInbox ──
   startup. The GUI settings screen and the text editor write the same bytes. It is
   reachable over SAF through the bundled documents provider.
 - **Overrides are runtime-only.** `RIVO_PER_PAGE=60`, `RIVO_CONFIG="CONFIG_THEME=…"` and
-  `rivo://…?per_page=60` never touch the file — the Android equivalent of `YT_X_*`
-  environment variables.
+  `rivo://…?per_page=60` never touch the file — the Android equivalent of the upstream
+  `YT_X_*` environment variables.
 - **Extensions are declarative.** `rivo.ui/1` patches menus, `rivo.lang/1` adds a language,
   `*.theme.json` adds a palette. A broken extension is logged and ignored, never fatal.
 - **Everything is one activity.** Every level of the app is the same list-of-entries
@@ -294,6 +298,7 @@ SOFTWARE.
 ├── SECURITY.md                     private vulnerability reports
 ├── LICENSE                         MIT, upstream notice preserved
 ├── tools/check_strings.py          TXT_* coverage check (must report 0 missing)
+├── tools/release.sh                signed release build from keystore.properties
 ├── .github/workflows/android.yml   CI: tests, lint, both debug APKs
 ├── build.gradle.kts                root build (plugins only)
 ├── settings.gradle.kts             repositories, module list
