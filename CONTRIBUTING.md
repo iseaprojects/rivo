@@ -27,15 +27,17 @@ gh repo create iseaprojects/rivo --public --source . --remote origin --push
 ```
 
 A release is tagged with the exact string in `app/build.gradle.kts` (`appVersion`), so the
-in-app update checker compares like for like:
+in-app update checker compares like for like. Write the notes in `docs/releases/<version>.md`
+first, then let `tools/publish.sh` do the rest:
 
 ```bash
-git tag -a v0.8.7-rivo.2 -m "Rivo 0.8.7-rivo.2"
-git push origin main --tags
-tools/release.sh fast
-gh release create v0.8.7-rivo.2 app/build/outputs/apk/fast/release/*.apk \
-  --title "Rivo 0.8.7-rivo.2" --notes-file CHANGELOG.md
+tools/publish.sh
 ```
+
+The script signs and builds both flavors, copies the APKs to `build/release` as
+`rivo-<version>-fast.apk` and `rivo-<version>-ytdlp.apk`, creates the tag if it is missing,
+pushes `main` and the tag, and creates or updates the GitHub release. Without a notes file it
+falls back to GitHub's generated notes.
 
 Signing keys stay in `keystore.properties` or the `RIVO_*` environment variables; both are
 excluded from git.
