@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="rivo_background">#FF16161E</color>
+    <color name="rivo_surface">#FF1A1B26</color>
+    <color name="rivo_accent">#FF2AC3DE</color>
+    <color name="ic_launcher_background">#FF1A1B26</color>
+</resources>

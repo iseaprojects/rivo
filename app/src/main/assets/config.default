@@ -1,0 +1,90 @@
+# ==============================================================================
+# Rivo configuration
+# ==============================================================================
+# Same CONFIG_* names as upstream yt-x 0.8.7 wherever the concept survives the
+# port. Unknown keys are preserved verbatim, so this file stays hand-editable.
+#
+# Value syntax: KEY=value, one per line, '#' starts a comment, values may be
+# quoted. Booleans are true/false. Lists are comma separated.
+#
+# Environment overrides (Termux):  YT_X_PER_PAGE=60 yt-x ...
+# Intent extra overrides:          --es RIVO_PER_PAGE 60
+# ==============================================================================
+
+# --- Extensions ---------------------------------------------------------------
+# Master switch for the SAF extension folder.
+CONFIG_EXTENSIONS_ENABLED=true
+# Empty = autoload everything found in <extensions>/{themes,langs,ui,sites,cmds}.
+# Otherwise a comma separated list of extension base names.
+CONFIG_AUTOLOADED_EXTENSIONS=
+
+# --- Interface ----------------------------------------------------------------
+# Kept for parity with yt-x; the Android launcher is always the native list.
+CONFIG_LAUNCHER=fzf
+CONFIG_ENABLE_COLORS=true
+# Preview panel and thumbnail previews are two independent toggles.
+CONFIG_ENABLE_PREVIEW=true
+CONFIG_ENABLE_PREVIEW_IMAGES=true
+# auto | phone | two-pane. auto switches at 600 dp.
+CONFIG_TWO_PANE=auto
+CONFIG_NERD_FONTS=true
+CONFIG_THEME=tokyo-night
+# auto | en | es | pt-BR
+CONFIG_LANG=auto
+# fzf-style bindings: action:key,action:key
+CONFIG_KEYBINDINGS=j:down,k:up,ctrl-d:half-page-down,ctrl-u:half-page-up,enter:select,esc:back,/:search,space:preview
+
+# --- Paging & cache -----------------------------------------------------------
+CONFIG_PER_PAGE=30
+CONFIG_CACHE_RETENTION_DAYS=3
+CONFIG_NO_OF_RECENT=10
+CONFIG_ENABLE_SEARCH_HISTORY=true
+
+# --- Player -------------------------------------------------------------------
+# internal | external. internal is the Media3 player that fixes DASH audio.
+CONFIG_PLAYER=internal
+# Equivalent of --disown-player: keep browsing while playback continues.
+CONFIG_DISOWN_PLAYER=true
+CONFIG_EXTERNAL_PLAYER=mpv-android
+CONFIG_MPV_ARGS=
+CONFIG_VLC_ARGS=
+CONFIG_YT_DLP_OPTS=
+# muxed | adaptive. muxed is required by most external players.
+CONFIG_EXTERNAL_FORMAT=muxed
+CONFIG_SPONSORBLOCK=true
+CONFIG_SPONSORBLOCK_CATEGORIES=sponsor,selfpromo,interaction
+CONFIG_SUBTITLES_LANGS=en,es
+CONFIG_STORYBOARDS=true
+# Re-resolve stream URLs before this many hours of age (YouTube expires at ~6 h).
+CONFIG_RESOLVE_MAX_AGE_HOURS=5
+
+# --- Downloads ----------------------------------------------------------------
+# Empty = Movies/Rivo through SAF. Otherwise a persisted tree URI.
+CONFIG_DOWNLOAD_DIR=
+CONFIG_DOWNLOADS_ENUMERATE=false
+CONFIG_DOWNLOAD_WIFI_ONLY=false
+CONFIG_DOWNLOAD_CONCURRENCY=2
+CONFIG_DOWNLOAD_RETRIES=3
+# m4a | opus | mp3 (mp3 needs an external encoder, see README).
+CONFIG_AUDIO_FORMAT=m4a
+CONFIG_VIDEO_FORMAT=bestvideo+bestaudio/best
+CONFIG_DOWNLOAD_ARCHIVE=true
+
+# --- Accounts & network -------------------------------------------------------
+# Upstream browser-cookie extraction is impossible on Android (app sandbox).
+# Cookies are imported from cookies.txt or captured in the built-in WebView.
+CONFIG_BROWSER=
+CONFIG_COOKIES_ENABLED=false
+CONFIG_PO_TOKEN=
+CONFIG_ACCOUNT_FEEDS=false
+
+# auto = NewPipe for YouTube, yt-dlp for everything else (ytdlp flavor only).
+CONFIG_EXTRACTOR=auto
+# Channel used by the yt-dlp self-update: stable, nightly or master.
+CONFIG_YTDLP_CHANNEL=stable
+
+# --- Maintenance --------------------------------------------------------------
+CONFIG_CHECK_FOR_UPDATES=true
+CONFIG_UPDATE_CHANNEL=stable
+CONFIG_NOTIFICATION_DURATION=5
+CONFIG_EDITOR=

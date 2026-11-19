@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Only the window shell is defined here. Every visual token (colors, typography,
+      shape) comes from the active theme extension in Compose, so importing a
+      Tokyo Night / Catppuccin .theme.json file repaints the whole app without a rebuild.
+    -->
+    <style name="Theme.Rivo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/rivo_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/rivo_accent</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+
+    <style name="Theme.Rivo.Player" parent="Theme.Rivo">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Rivo.Transparent" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+</resources>

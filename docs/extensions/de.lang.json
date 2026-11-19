@@ -1,0 +1,29 @@
+{
+  "$schema": "https://rivo.dev/schemas/lang/1.json",
+  "schema": "rivo.lang/1",
+  "locale": "de",
+  "name": "Deutsch",
+  "extends": "en",
+  "strings": {
+    "TXT_MENU_MAIN": "Hauptmenü",
+    "TXT_MENU_MAIN_FEED": "Dein Feed",
+    "TXT_MENU_MAIN_SEARCH": "Suchen",
+    "TXT_MENU_MAIN_SUBS_FEED": "Abonnements",
+    "TXT_MENU_MAIN_TRENDING": "Beliebt",
+    "TXT_MENU_MAIN_WATCH_LATER": "Später ansehen",
+    "TXT_MENU_MAIN_LIKED": "Gefällt mir",
+    "TXT_MENU_MAIN_HISTORY": "Verlauf",
+    "TXT_MENU_MAIN_PLAYLISTS": "Playlists",
+    "TXT_MENU_MAIN_CHANNELS": "Kanäle",
+    "TXT_MENU_MAIN_MISC": "Sonstiges",
+    "TXT_MENU_MAIN_EDIT_CONFIG": "Einstellungen bearbeiten",
+    "TXT_MENU_BACK": "Zurück",
+    "TXT_MENU_EXIT": "Beenden",
+    "TXT_MENU_NEXT": "Weiter",
+    "TXT_MENU_PREVIOUS": "Zurück",
+    "TXT_ANDROID_CFG_PREVIEW": "Vorschau",
+    "TXT_ANDROID_CFG_THEME": "Farbschema",
+    "TXT_ANDROID_CFG_LANGUAGE": "Sprache",
+    "TXT_ANDROID_EMPTY": "Noch nichts hier"
+  }
+}

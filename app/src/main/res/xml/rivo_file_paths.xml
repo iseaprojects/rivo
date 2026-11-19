@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path
+        name="updates"
+        path="updates/" />
+    <files-path
+        name="exports"
+        path="exports/" />
+    <files-path
+        name="config"
+        path="config" />
+    <external-files-path
+        name="library"
+        path="." />
+    <external-path
+        name="downloads"
+        path="." />
+</paths>

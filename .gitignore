@@ -1,0 +1,27 @@
+*.iml
+.gradle/
+.kotlin/
+local.properties
+.idea/
+.DS_Store
+Thumbs.db
+
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+out/
+
+*.apk
+*.aab
+*.ap_
+*.jks
+*.keystore
+secrets.properties
+*.log
+*.hprof
+
+# Patched Nerd Fonts are dropped in by the developer; the app falls back to the
+# system monospace face, so they are not vendored (see ui/theme/Fonts.kt).
+app/src/main/assets/fonts/*.ttf
+app/src/main/assets/fonts/*.otf

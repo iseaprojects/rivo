@@ -1,0 +1,73 @@
+name: Bug report
+description: Something in Rivo does not work as documented.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste cookie exports, PO tokens or a full `config` file. Redact the
+        `SAPISID`/`__Secure-*` values if a log line includes them.
+  - type: input
+    id: version
+    attributes:
+      label: Rivo version
+      description: Settings > About, or the APK filename.
+      placeholder: 0.8.7-rivo.2-fast
+    validations:
+      required: true
+  - type: dropdown
+    id: flavor
+    attributes:
+      label: Flavor
+      options:
+        - fast (NewPipeExtractor only)
+        - ytdlp (NewPipeExtractor + yt-dlp)
+        - built from source
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Pixel 8, Android 16
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the deep link or the menu path if you can.
+      placeholder: |
+        1. Open Misc > Custom Commands
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: The exact error text or a screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logcat (optional)
+      description: "`adb logcat -d | grep -E 'Rivo|AndroidRuntime'`"
+      render: text
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Checks
+      options:
+        - label: I removed cookies, PO tokens and private data from the report.
+          required: true
+        - label: This is not a request for DRM, age-gate or geo-restriction bypasses.
+          required: true

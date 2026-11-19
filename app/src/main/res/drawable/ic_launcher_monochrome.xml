@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Themed-icon drawable (Android 13+). Only the alpha channel is used, so a single
+    opaque fill is correct: the launcher tints it with the system palette.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M32,38 L46,54 L32,70 L38,76 L58,54 L38,32 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M60,66 h18 v6 h-18 z" />
+</vector>

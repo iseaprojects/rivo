@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Declaring any <include> turns the backup into a whitelist, so everything that
+    is not listed (cookies, secure prefs, the download cache, extracted media) is
+    already excluded. Listing explicit <exclude> entries for paths outside the
+    whitelist is redundant and lint flags it as a bug.
+-->
+<full-backup-content>
+    <include domain="file" path="config" />
+    <include domain="file" path="extensions/" />
+    <include domain="database" path="rivo-library.db" />
+</full-backup-content>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <!--
+        Cloud backup is a whitelist: config, bundled/user extensions and the local
+        library database. Cookies and the encrypted cookie store are never listed,
+        so they can never leave the device.
+
+        Device transfer is a full copy on purpose: moving to a new phone keeps the
+        library, playlists and saved videos. Credentials still stay out so they can
+        be re-imported deliberately.
+    -->
+    <cloud-backup>
+        <include domain="file" path="config" />
+        <include domain="file" path="extensions/" />
+        <include domain="database" path="rivo-library.db" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="." />
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <exclude domain="file" path="cookies/" />
+        <exclude domain="sharedpref" path="rivo_secure_cookies.xml" />
+    </device-transfer>
+</data-extraction-rules>

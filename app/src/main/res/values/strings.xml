@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Rivo</string>
+
+    <!-- System surfaces; UI copy lives in assets/extensions/langs/*.lang.json -->
+    <string name="provider_label">Rivo files</string>
+    <string name="tile_label">Rivo search</string>
+    <string name="widget_label">Rivo recent</string>
+    <string name="widget_empty">Open Rivo to start watching</string>
+    <string name="playback_service_label">Rivo playback</string>
+    <string name="download_service_label">Rivo downloads</string>
+
+    <!-- Player notifications (the window itself is localized from the lang packs). -->
+    <string name="playback_preparing_video">Preparing video…</string>
+    <string name="playback_preparing_audio">Preparing audio…</string>
+    <string name="playback_nothing">Nothing is playing</string>
+
+    <string name="notification_channel_playback">Playback</string>
+    <string name="notification_channel_playback_desc">Media session and playback controls</string>
+    <string name="notification_channel_downloads">Downloads</string>
+    <string name="notification_channel_downloads_desc">Download progress, pauses and failures</string>
+    <string name="notification_channel_general">General</string>
+    <string name="notification_channel_general_desc">Updates, cache cleanup and extension errors</string>
+
+    <!-- Tasker/automation fallback (Android 10..13 cannot start activities from a receiver). -->
+    <string name="tasker_notification_title">Rivo action</string>
+    <string name="tasker_notification_text">Tap to open %1$s</string>
+
+    <!-- Download notifications. -->
+    <string name="download_notification_title">Downloading</string>
+    <string name="download_notification_waiting">Waiting for Wi-Fi</string>
+    <string name="download_notification_queue">%1$d%% · %2$d / %3$d</string>
+    <string name="download_notification_progress">%1$d%%</string>
+    <string name="download_notification_preparing">Preparing download…</string>
+    <string name="download_notification_cancel">Cancel all</string>
+    <string name="download_notification_failed">A download failed</string>
+
+    <string name="shortcut_search_short">Search</string>
+    <string name="shortcut_search_long">Search YouTube</string>
+    <string name="shortcut_feed_short">Feed</string>
+    <string name="shortcut_feed_long">Open your feed</string>
+    <string name="shortcut_subs_short">Subscriptions</string>
+    <string name="shortcut_subs_long">Subscriptions feed</string>
+    <string name="shortcut_saved_short">Saved</string>
+    <string name="shortcut_saved_long">Saved videos</string>
+    <string name="shortcut_recent_short">Recent</string>
+    <string name="shortcut_recent_long">Recently watched</string>
+    <string name="shortcut_downloads_short">Downloads</string>
+    <string name="shortcut_downloads_long">Local downloads</string>
+
+    <string name="provider_root">Rivo</string>
+    <string name="provider_config">config</string>
+    <string name="provider_unsupported">This operation is not supported by Rivo files</string>
+</resources>
+

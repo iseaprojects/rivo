@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Networking, playback and downloads -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+      Optional, granted by hand in Settings > Apps > Display over other apps. It is the only
+      entitlement a normal app can hold that lifts the background-activity-start block, so
+      without it a Tasker broadcast becomes a tappable notification instead of opening the UI.
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Writing into Movies/Rivo on Android 8-9. Android 10+ uses SAF instead. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!-- Optional "Shell" action: hand the session over to Termux. -->
+    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
+
+    <!--
+      Components are declared in the same phase as the class that implements them. An
+      entry without its class is not harmless: the system probes declared media browsers
+      and QS tiles on its own schedule, instantiates them, and kills the process when the
+      class is missing. So, per phase:
+        F1 -> MainActivity, RivoDocumentsProvider
+        F2 -> WebLoginActivity
+        F5 -> PlayerActivity, PlaybackService
+        F6 -> DownloadService
+        F7 -> RivoTileService, TaskerFireReceiver, RecentWidgetProvider, ConfigEditorActivity
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="video/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="audio/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="text/plain" />
+        </intent>
+        <package android:name="com.termux" />
+        <package android:name="is.xyz.mpv" />
+        <package android:name="org.videolan.vlc" />
+        <package android:name="com.mxtech.videoplayer.ad" />
+        <package android:name="org.fdroid.fdroid" />
+    </queries>
+
+    <application
+        android:name=".RivoApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Rivo"
+        android:usesCleartextTraffic="false"
+        tools:targetApi="35">
+
+        <!-- Android Auto: media-only app. -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.Rivo"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- rivo://search?q=:4k+eonos&action=play&exit=true, rivo://feed, ... -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="rivo" />
+            </intent-filter>
+
+            <!-- YouTube links: watch, shorts, live, playlists, channels. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" android:host="youtu.be" />
+                <data android:scheme="https" android:host="www.youtube.com" />
+                <data android:scheme="https" android:host="youtube.com" />
+                <data android:scheme="https" android:host="m.youtube.com" />
+                <data android:scheme="https" android:host="music.youtube.com" />
+                <data android:scheme="https" android:host="www.youtube-nocookie.com" />
+                <data android:scheme="http" android:host="www.youtube.com" />
+                <data android:scheme="http" android:host="youtube.com" />
+                <data android:scheme="http" android:host="youtu.be" />
+            </intent-filter>
+
+            <!-- Share a URL or free text into Rivo. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <!-- Assistant / Android Auto voice search ("play lofi on Rivo"). -->
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <activity
+            android:name=".ui.login.WebLoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Rivo" />
+
+        <!-- In-app plain-text editor for files/config (F7). -->
+        <activity
+            android:name=".ui.config.ConfigEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Rivo" />
+
+        <!--
+          The in-app player hosts no decoder: it renders the MediaSessionService's session,
+          which is why rotation and PiP do not interrupt playback.
+        -->
+        <activity
+            android:name=".ui.player.PlayerActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden|uiMode"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:theme="@style/Theme.Rivo" />
+
+        <!--
+          Exported on purpose: MediaSessionService is discovered by the system media UI and
+          by media resumption, so it cannot require a signature permission.
+        -->
+        <service
+            android:name=".player.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            android:label="@string/playback_service_label"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
+        <!--
+          Download queue. `dataSync` is the correct type: the service moves user-requested
+          files, not media playback, and it stops as soon as the queue drains.
+        -->
+        <service
+            android:name=".download.DownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:label="@string/download_service_label" />
+
+        <!-- Quick Settings tile: one tap opens rivo://search. -->
+        <service
+            android:name=".platform.RivoTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TILE_ICON"
+                android:resource="@drawable/ic_tile" />
+        </service>
+
+        <!--
+          Tasker/automation: a task broadcasts rivo_uri (or a rivo:// data URI) and the
+          receiver opens the same screen the link would. Exported on purpose so any
+          automation app can send it; only RIVO_* extras are forwarded, so the worst a
+          hostile sender can do is open a screen the user could open themselves.
+        -->
+        <receiver
+            android:name=".platform.TaskerFireReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="io.github.iseaprojects.rivo.action.TASKER_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Home-screen list of recent videos; tap opens the item's actions menu. -->
+        <receiver
+            android:name=".platform.RecentWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_recent_info" />
+        </receiver>
+
+        <!--
+          Exposes filesDir over SAF so the plain-text config, extension packs and the
+          local library can be edited/browsed from any file manager or desktop.
+        -->
+        <provider
+            android:name=".provider.RivoDocumentsProvider"
+            android:authorities="${applicationId}.documents"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:label="@string/provider_label"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rivo_file_paths" />
+        </provider>
+    </application>
+</manifest>

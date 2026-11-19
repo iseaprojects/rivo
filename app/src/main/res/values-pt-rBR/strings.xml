@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="provider_label">Arquivos do Rivo</string>
+    <string name="tile_label">Buscar no Rivo</string>
+    <string name="widget_label">Recentes do Rivo</string>
+    <string name="widget_empty">Abra o Rivo para começar</string>
+    <string name="tasker_notification_title">Ação do Rivo</string>
+    <string name="tasker_notification_text">Toque para abrir %1$s</string>
+    <string name="playback_service_label">Reprodução do Rivo</string>
+    <string name="playback_preparing_video">Preparando o vídeo.</string>
+    <string name="playback_preparing_audio">Preparando o áudio.</string>
+    <string name="playback_nothing">Nada está sendo reproduzido</string>
+    <string name="download_service_label">Downloads do Rivo</string>
+
+    <string name="notification_channel_playback">Reprodução</string>
+    <string name="notification_channel_playback_desc">Sessão de mídia e controles de reprodução</string>
+    <string name="notification_channel_downloads">Downloads</string>
+    <string name="notification_channel_downloads_desc">Progresso, pausas e falhas de download</string>
+    <string name="notification_channel_general">Geral</string>
+    <string name="notification_channel_general_desc">Atualizações, limpeza de cache e erros de extensões</string>
+
+    <string name="download_notification_title">Baixando</string>
+    <string name="download_notification_waiting">Aguardando Wi-Fi</string>
+    <string name="download_notification_queue">%1$d%% · %2$d / %3$d</string>
+    <string name="download_notification_progress">%1$d%%</string>
+    <string name="download_notification_preparing">Preparando o download…</string>
+    <string name="download_notification_cancel">Cancelar tudo</string>
+    <string name="download_notification_failed">Um download falhou</string>
+
+    <string name="shortcut_search_short">Buscar</string>
+    <string name="shortcut_search_long">Buscar no YouTube</string>
+    <string name="shortcut_feed_short">Feed</string>
+    <string name="shortcut_feed_long">Abrir seu feed</string>
+    <string name="shortcut_subs_short">Inscrições</string>
+    <string name="shortcut_subs_long">Feed de inscrições</string>
+    <string name="shortcut_saved_short">Salvos</string>
+    <string name="shortcut_saved_long">Vídeos salvos</string>
+    <string name="shortcut_recent_short">Recentes</string>
+    <string name="shortcut_recent_long">Assistidos recentemente</string>
+    <string name="shortcut_downloads_short">Downloads</string>
+    <string name="shortcut_downloads_long">Downloads locais</string>
+
+    <string name="provider_root">Rivo</string>
+    <string name="provider_config">config</string>
+    <string name="provider_unsupported">Os arquivos do Rivo não suportam esta operação</string>
+</resources>
+

@@ -1,0 +1,30 @@
+{
+  "schema": "rivo.ui/1",
+  "name": "Example: reordering and pruning",
+  "description": "Demonstrates sort/filter without injecting anything. This is the direct equivalent of an upstream .ui file calling _menu_main \"1,2,3,...\" \"^pattern\".",
+  "menus": {
+    "main": {
+      "sort": [
+        "search",
+        "feed.home",
+        "feed.subscriptions",
+        "feed.trending",
+        "library.saved",
+        "library.recent",
+        "playlists",
+        "channels",
+        "misc"
+      ],
+      "dropUnlisted": false
+    },
+    "misc": {
+      "filter": "^misc\\.(new_custom_command|edit_histories)$",
+      "sort": [
+        "misc.explore_channels",
+        "misc.custom_commands",
+        "misc.sync_subs",
+        "misc.config"
+      ]
+    }
+  }
+}

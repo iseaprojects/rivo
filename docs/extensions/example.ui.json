@@ -1,0 +1,49 @@
+{
+  "schema": "rivo.ui/1",
+  "name": "Example: extra sites entry",
+  "description": "Adds a Sites submenu to the main menu and one link to the miscellaneous menu. Both use the built-in app.open_url handler, so this example works as-is.",
+  "menus": {
+    "main": {
+      "inject": [
+        {
+          "id": "sites",
+          "label": "Sites",
+          "icon": "\uE5FF",
+          "position": "after:channels",
+          "children": [
+            {
+              "id": "sites.dailymotion",
+              "label": "Dailymotion",
+              "payloadUrl": "https://www.dailymotion.com",
+              "handler": "app.open_url"
+            },
+            {
+              "id": "sites.peertube",
+              "label": "PeerTube",
+              "payloadUrl": "https://joinpeertube.org",
+              "handler": "app.open_url"
+            },
+            {
+              "id": "sites.upstream",
+              "label": "yt-x on GitHub",
+              "payloadUrl": "https://github.com/Benexl/yt-x",
+              "handler": "app.open_url"
+            }
+          ]
+        }
+      ]
+    },
+    "misc": {
+      "inject": [
+        {
+          "id": "misc.upstream_readme",
+          "label": "Upstream documentation",
+          "icon": "\uF0C1",
+          "handler": "app.open_url",
+          "payloadUrl": "https://github.com/Benexl/yt-x#readme",
+          "position": "after:misc.about"
+        }
+      ]
+    }
+  }
+}
