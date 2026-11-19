@@ -15,7 +15,7 @@ frame, so a link does exactly what navigating there by hand does.
 | `rivo://downloads` | Download queue and files |
 | `rivo://misc` · `rivo://config` | Miscellaneous and configuration screens |
 | `rivo://channels` | Channel list |
-| `rivo://channel?name=…&tab=…` | One channel; `tab` selects the section |
+| `rivo://channel?name=…` | One channel; accepts `name`, `handle`, `id` or `url` |
 | `rivo://playlist?name=…&id=…` | A YouTube playlist |
 | `rivo://custom-playlist?name=…` | A playlist stored on the device |
 | `rivo://custom-cmd?name=…` | A saved custom command |
