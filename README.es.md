@@ -11,6 +11,7 @@
 <a href="#compilar"><img src="https://img.shields.io/badge/versi%C3%B3n-0.8.7--rivo.2-2ac3de?style=flat-square" alt="Versión 0.8.7-rivo.2"></a>
 </p>
 <p><a href="README.md">English</a> · <a href="README.es.md">Español</a></p>
+<p><img src="docs/images/main-menu.png" alt="Menú principal de Rivo" width="320"></p>
 </div>
 
 Rivo es un port nativo a Android de [yt-x](https://github.com/Benexl/yt-x) 0.8.7 — el navegador
@@ -376,6 +377,7 @@ también están apagadas).
     ├── EXTRACTORS.md
     ├── PARITY.md
     ├── VERIFICATION.md
+    ├── images/main-menu.png                    captura usada por ambos README
     └── extensions/                             ejemplos de extensiones anotados
 ```
 
