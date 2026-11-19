@@ -121,7 +121,9 @@ KSP 2.3.14, Compose BOM 2026.09.00, Media3 1.11.1, Room 2.8.5, WorkManager 2.12.
 
 Versions are `<upstream base>-rivo.<revision>` (`0.8.7-rivo.2` in this build). The update
 checker compares the whole tag, including dotted revision identifiers, so a revision bump is
-a real update.
+a real update. The check uses the unauthenticated GitHub API, so a **private** repository
+answers `404` and the screen reports `Check failed`; it starts working as soon as the
+repository is public or the API answers with a release list.
 
 Release signing is read from the environment, so no keystore is ever stored in the repo:
 

@@ -845,9 +845,10 @@ it does not add behaviour.
   `rivo://search?q=…` each push the expected frame. The Tasker broadcast opens the router
   directly when "Display over other apps" is granted and otherwise posts the
   `rivo://…` notification, as designed (D47).
-- **Update endpoint.** `api.github.com/repos/iseaprojects/rivo/releases` answers 404 until
-  that repository exists, so the Update screen reports `Check failed` on an unpublished
-  checkout. A repository with no releases answers `[]` and reads "Up to date".
+- **Update endpoint.** `api.github.com/repos/iseaprojects/rivo/releases` answers 404 to an
+  unauthenticated client while the repository is private, so the Update screen reports
+  `Check failed` on this checkout. A repository with no releases answers `[]` and reads
+  "Up to date"; the check works once the repository is public.
 - **Artifacts.** `app-fast-debug.apk` 28.12 MB, `app-ytdlp-debug.apk` 105.50 MB,
   `app-fast-release-unsigned.apk` 3.82 MB (R8 + resource shrinking). Signing material is read
   from the environment or an ignored `keystore.properties` through `tools/release.sh`; no
