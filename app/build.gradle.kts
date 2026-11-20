@@ -15,7 +15,7 @@ plugins {
  *
  * Everything above the VideoExtractor interface is flavor-agnostic.
  */
-val appVersion = "0.8.7-rivo.2"
+val appVersion = "0.8.7-rivo.3"
 
 android {
     namespace = "io.github.iseaprojects.rivo"
@@ -28,7 +28,7 @@ android {
         applicationId = "io.github.iseaprojects.rivo"
         minSdk = 26
         targetSdk = 37
-        versionCode = 807002
+        versionCode = 807003
         versionName = appVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

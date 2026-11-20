@@ -120,7 +120,7 @@ Status reflects the repository after **F7**.
 | Duplicate names get ` [<video id>]` before the extension | same, when the folder already holds that name and the archive is off | F6 | Done |
 | Download archive | `kind<TAB>videoId` in `files/downloads/archive.txt`, no playlist URL in the key (D40) | F6 | Done |
 | `CONFIG_DOWNLOAD_DIR=$HOME/Videos/yt-x` | storage-relative root, default `Movies/Rivo`; MediaStore, SAF tree or plain directory by shape (D42) | F6 | Done |
-| `yt-dlp` resumable transfer | ranged requests + `CONFIG_DOWNLOAD_RETRIES`; a paused task keeps its part | F6 | Done |
+| yt-dlp resumable transfer | ranged requests + `CONFIG_DOWNLOAD_RETRIES` (1..10, editable in the config screen, one budget per task); a paused task keeps its part | F6 | Done |
 | Queue / pause / progress | persisted `queue.json` + `dataSync` foreground service, aggregate notification | F6 | Done |
 | Wi-Fi only | `CONFIG_DOWNLOAD_WIFI_ONLY`, task held at `QUEUED`, "Waiting for Wi-Fi" notification | F6 | Done |
 | Muxing | `MediaMuxer` joins MP4 video + MP4 audio, no re-encode (D41) | F6 | Done |
@@ -190,6 +190,12 @@ Status reflects the repository after **F7**.
   merged instead of forcing a muxed 720p stream.
 - **`CONFIG_LAUNCHER`, `CONFIG_PLAYER`, `CONFIG_EDITOR`** are accepted and preserved in the
   config file so an imported file round-trips, but they do not select anything on Android.
+- **`CONFIG_STORYBOARDS`, `CONFIG_ENABLE_COLORS` and `CONFIG_NOTIFICATION_DURATION`** are the
+  same: parsed, preserved, and inert. Storyboards would mean fetching a sprite sheet and its
+  JSON per preview (the thumbnail is what the preview shows), colours are the theme's job
+  instead of ANSI codes, and how long a notification stays is the system's decision, not an
+  app setting. They are listed here rather than silently dropped so an imported config keeps
+  every line it came with.
 - **Play Store.** Not distributed there; see the distribution note in the README.
 - **The archive key is `kind<TAB>videoId`, not "kind plus playlist URL".** The playlist a
   video was listed in does not change the file, and keying by it would re-download the same
