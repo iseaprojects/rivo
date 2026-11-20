@@ -1,13 +1,12 @@
 # Verification
 
-Everything below was run on Windows with JDK 17.0.19, the Android SDK at `C:\Android\Sdk`
-(platforms 35, 36, 37.0, 37.1; Build Tools 34–37), Gradle 9.9.1 via the committed wrapper
-and AGP 9.5.1. No part of the project is unbuilt or stubbed.
+Everything below was run on Windows with JDK 17.0.19, the Android SDK (platforms 35, 36, 37.0,
+37.1; Build Tools 34–37), Gradle 9.9.1 via the committed wrapper and AGP 9.5.1. No part of the
+project is unbuilt or stubbed.
 
 > F1-F7 were verified while the project was still called yt-x for Android. Quoted tool output
-> keeps the identifiers of the build that produced it (for example the old
-> `dev.ytx.android.debug` package id); commands, package names, paths and links use the
-> current `Rivo` identifiers.
+> keeps the identifiers of the build that produced it; commands, package names, paths and links
+> use the current `Rivo` identifiers.
 
 ## Build matrix
 
