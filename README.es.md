@@ -4,7 +4,7 @@
 <p>
 <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-MIT-2ac3de?style=flat-square" alt="MIT"></a>
 <a href="#instalar"><img src="https://img.shields.io/badge/Android-8.0%2B-2ac3de?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+"></a>
-<a href="#instalar"><img src="https://img.shields.io/badge/versi%C3%B3n-0.8.7--rivo.2-2ac3de?style=flat-square" alt="Versión 0.8.7-rivo.2"></a>
+<a href="#instalar"><img src="https://img.shields.io/github/v/release/iseaprojects/rivo?label=versi%C3%B3n&style=flat-square&color=2ac3de" alt="Última versión"></a>
 </p>
 <p><a href="README.md">English</a> · <a href="README.es.md">Español</a></p>
 <p><img src="docs/images/main-menu.png" alt="El menú principal de Rivo" width="280"></p>
