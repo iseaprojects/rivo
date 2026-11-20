@@ -846,10 +846,17 @@ it does not add behaviour.
   `rivo://…` notification, as designed (D47).
 - **Update endpoint.** `api.github.com/repos/iseaprojects/rivo/releases` is read without a
   token, so the check needs the repository to be public; a private repository answers 404 and
-  the Update screen reads `Check failed`. The published `v0.8.7-rivo.2` release is neither a
-  draft nor a pre-release and matches `BuildConfig.RIVO_VERSION`, so the screen reads
-  "Up to date". A repository with no releases answers `[]`, which also reads "Up to date";
+  the Update screen reads `Check failed`. On the public repository, a signed `0.8.7-rivo.2`
+  install on Pixel_8_API_36 opens `rivo://misc`, selects Update and reads "Up to date" under
+  `0.8.7-rivo.2`. A repository with no releases answers `[]`, which also reads "Up to date";
   tag ordering is covered by `VersionNumbersTest`.
+- **Public access.** With no credentials, the repository page, the REST endpoints and the
+  release assets answer 200. `rivo-0.8.7-rivo.2-fast.apk` downloaded anonymously hashes to
+  `e8ff8153…a2f1`, the same SHA-256 as the local signed build. The CI badge and the shields
+  version badge render the current tag.
+- **Repository settings.** Private vulnerability reporting, secret scanning, push protection
+  and Dependabot alerts are enabled; `main` requires the `build` check, forbids force pushes
+  and deletion, and deleting a head branch on merge is on. Community profile reads 100%.
 - **Artifacts.** `app-fast-debug.apk` 28.12 MB, `app-ytdlp-debug.apk` 105.50 MB,
   `app-fast-release-unsigned.apk` 3.82 MB (R8 + resource shrinking). Signing material is read
   from the environment or an ignored `keystore.properties` through `tools/release.sh`; no
@@ -858,7 +865,9 @@ it does not add behaviour.
   opens the release page. `SYSTEM_ALERT_WINDOW` is declared only as the opt-in that lets a
   Tasker broadcast start the UI from the background (D47).
 - **Documentation.** README (English and Spanish), ARCHITECTURE, DEEPLINKS, DECISIONS (D1-D48),
-  PARITY, EXTRACTORS, CONTRIBUTING, SECURITY and this file describe the shipped behaviour; the
-  per-phase walkthroughs above are the manual checklist.
+  PARITY, EXTRACTORS, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT and this file describe the
+  shipped behaviour; the per-phase walkthroughs above are the manual checklist. Every relative
+  link in the tracked Markdown resolves, and the workflow, Dependabot and issue-template YAML
+  parse.
 - **Known gaps.** The "Not verified" lists per phase name what was not exercised; none of
   them is a screen that is missing or stubbed.
