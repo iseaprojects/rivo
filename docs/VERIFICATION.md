@@ -852,8 +852,8 @@ it does not add behaviour.
   tag ordering is covered by `VersionNumbersTest`.
 - **Public access.** With no credentials, the repository page, the REST endpoints and the
   release assets answer 200. `rivo-0.8.7-rivo.2-fast.apk` downloaded anonymously hashes to
-  `e8ff8153…a2f1`, the same SHA-256 as the local signed build. The CI badge and the shields
-  version badge render the current tag.
+  `e8ff8153…a2f1`, the same SHA-256 as the local signed build. The shields version badge
+  renders the current tag and the workflow badge reports the `main` build.
 - **Repository settings.** Private vulnerability reporting, secret scanning, push protection
   and Dependabot alerts are enabled; `main` requires the `build` check, forbids force pushes
   and deletion, and deleting a head branch on merge is on. Community profile reads 100%.
