@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a behaviour Rivo does not have yet.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rivo is a port of yt-x with a deliberately narrow scope: no account login, no
+        algorithmic feed, no DRM, age-gate or geo-restriction bypasses. Proposals outside that
+        scope are closed rather than debated.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: What should the app do? Mention the menu or screen it belongs to.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing settings, deep links, Tasker or a custom command that already cover it.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This does not require a DRM, age-gate, paywall or geo-restriction bypass.
+          required: true
+        - label: I searched the existing issues first.
+          required: true

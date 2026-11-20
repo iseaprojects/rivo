@@ -845,10 +845,12 @@ it does not add behaviour.
   `rivo://search?q=…` each push the expected frame. The Tasker broadcast opens the router
   directly when "Display over other apps" is granted and otherwise posts the
   `rivo://…` notification, as designed (D47).
-- **Update endpoint.** `api.github.com/repos/iseaprojects/rivo/releases` answers 404 to an
-  unauthenticated client while the repository is private, so the Update screen reports
-  `Check failed` on this checkout. A repository with no releases answers `[]` and reads
-  "Up to date"; the check works once the repository is public.
+- **Update endpoint.** `api.github.com/repos/iseaprojects/rivo/releases` is read without a
+  token, so the check needs the repository to be public; a private repository answers 404 and
+  the Update screen reads `Check failed`. The published `v0.8.7-rivo.2` release is neither a
+  draft nor a pre-release and matches `BuildConfig.RIVO_VERSION`, so the screen reads
+  "Up to date". A repository with no releases answers `[]`, which also reads "Up to date";
+  tag ordering is covered by `VersionNumbersTest`.
 - **Artifacts.** `app-fast-debug.apk` 28.12 MB, `app-ytdlp-debug.apk` 105.50 MB,
   `app-fast-release-unsigned.apk` 3.82 MB (R8 + resource shrinking). Signing material is read
   from the environment or an ignored `keystore.properties` through `tools/release.sh`; no

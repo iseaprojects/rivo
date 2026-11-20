@@ -17,18 +17,16 @@ wrapper. `local.properties` is the only machine-specific file.
 The `fast` flavor uses NewPipeExtractor only; `ytdlp` adds youtubedl-android (CPython and
 aria2), which is why its APK is much larger.
 
+## Pull requests
+
+Fork the repository, branch from `main`, keep the change focused, and open the pull request
+against `main`. CI runs the unit tests for both flavors, lint and the two debug builds; link
+the issue it closes when there is one.
+
 ## Publishing
 
-The repository is self-contained; `main` holds the import commit. To publish a mirror and
-push it:
-
-```bash
-gh repo create iseaprojects/rivo --public --source . --remote origin --push
-```
-
-A release is tagged with the exact string in `app/build.gradle.kts` (`appVersion`), so the
-in-app update checker compares like for like. Write the notes in `docs/releases/<version>.md`
-first, then let `tools/publish.sh` do the rest:
+Releases are cut from `main`. Bump `appVersion` in `app/build.gradle.kts`, write the notes in
+`docs/releases/<version>.md`, and run:
 
 ```bash
 tools/publish.sh
@@ -38,6 +36,9 @@ The script signs and builds both flavors, copies the APKs to `build/release` as
 `rivo-<version>-fast.apk` and `rivo-<version>-ytdlp.apk`, creates the tag if it is missing,
 pushes `main` and the tag, and creates or updates the GitHub release. Without a notes file it
 falls back to GitHub's generated notes.
+
+The tag must match `appVersion` exactly, because the in-app update checker compares the two.
+That feed is read without a token, so the repository has to stay public for the check to work.
 
 Signing keys stay in `keystore.properties` or the `RIVO_*` environment variables; both are
 excluded from git.

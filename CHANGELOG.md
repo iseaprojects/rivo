@@ -33,6 +33,7 @@ First release under the Rivo name. Functionally it is the completed F1-F8 Androi
 - Update checks read this repository's releases instead of the upstream ones; the upstream
   repository stays credited in the about screen. A tag like `0.8.7-rivo.10` now sorts above
   `0.8.7-rivo.9`, and a repository with no releases reports "Up to date" instead of a failure.
+  The feed is read unauthenticated, so the repository has to be public for the check to work.
 - `tools/publish.sh` builds both flavors, packs them as `rivo-<version>-fast.apk` and
   `rivo-<version>-ytdlp.apk`, tags the commit and publishes the release from
   `docs/releases/<version>.md`.
