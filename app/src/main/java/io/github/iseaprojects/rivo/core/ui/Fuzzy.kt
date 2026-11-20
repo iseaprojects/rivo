@@ -1,5 +1,8 @@
 package io.github.iseaprojects.rivo.core.ui
 
+import java.text.Normalizer
+import java.util.Locale
+
 /**
  * fzf-style matching for the always-focused filter.
  *
@@ -8,6 +11,12 @@ package io.github.iseaprojects.rivo.core.ui
  * the text scores higher again, so typing `git` puts "gitignore explained" above a
  * passing mention of "digits". Ties keep the original order, which matters for feeds
  * where the extractor already ordered by relevance.
+ *
+ * Both sides are folded first: case and diacritics. On a phone keyboard accents cost a
+ * long-press, so "cancion" has to find "Canción" and "videoaula" has to find "Videoaula".
+ * Folding is done with NFD plus removal of the combining marks, which keeps the base
+ * letter; the folded string is therefore shorter than the original, and every index
+ * below refers to the folded text.
  */
 object Fuzzy {
 
@@ -15,12 +24,12 @@ object Fuzzy {
 
     /** Null when the query does not match; higher scores sort first. */
     fun score(query: String, text: String): Int? {
-        val needle = query.trim()
+        val needle = fold(query.trim())
         if (needle.isEmpty()) return 0
-        val haystack = text.lowercase()
+        val haystack = fold(text)
         var total = 0
 
-        for (token in needle.lowercase().split(WHITESPACE)) {
+        for (token in needle.split(WHITESPACE)) {
             if (token.isEmpty()) continue
             val substring = haystack.indexOf(token)
             total += when {
@@ -62,5 +71,15 @@ object Fuzzy {
     private fun isBoundary(char: Char): Boolean =
         char.isWhitespace() || char == '-' || char == '_' || char == '/' || char == '.' || char == ':'
 
+    /**
+     * Case folding for the user's own script, not the JVM default locale: on a Turkish
+     * device `I` lowercases to a dotless `ı` and every match would silently break.
+     */
+    internal fun fold(text: String): String =
+        Normalizer.normalize(text, Normalizer.Form.NFD)
+            .replace(COMBINING_MARKS, "")
+            .lowercase(Locale.ROOT)
+
     private val WHITESPACE = Regex("\\s+")
+    private val COMBINING_MARKS = Regex("\\p{Mn}+")
 }

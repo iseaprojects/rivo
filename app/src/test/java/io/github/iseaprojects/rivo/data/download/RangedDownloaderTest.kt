@@ -189,13 +189,50 @@ class RangedDownloaderTest {
         }
 
         try {
-            RangedDownloader(client, attempts = 2).download(url("/file"), emptyMap(), destination)
+            RangedDownloader(client, defaultAttempts = 2).download(url("/file"), emptyMap(), destination)
             fail("a truncated body should fail")
         } catch (error: DownloadException) {
             assertTrue(error.retryable)
             assertTrue(error.message.orEmpty().contains("attempts"))
         }
         assertEquals(2, hits)
+    }
+
+    @Test
+    fun `the configured budget is what the transfer spends`() = runBlocking {
+        var hits = 0
+        server.createContext("/file") { exchange ->
+            hits++
+            exchange.sendResponseHeaders(500, -1)
+            exchange.close()
+        }
+
+        try {
+            downloader.download(url("/file"), emptyMap(), destination, attempts = 1)
+            fail("a 500 with one attempt should fail")
+        } catch (error: DownloadException) {
+            assertTrue(error.retryable)
+            assertTrue(error.message.orEmpty().contains("after 1 attempts"))
+        }
+        assertEquals(1, hits)
+    }
+
+    @Test
+    fun `a budget below one still makes a single attempt`() = runBlocking {
+        var hits = 0
+        server.createContext("/file") { exchange ->
+            hits++
+            exchange.sendResponseHeaders(500, -1)
+            exchange.close()
+        }
+
+        try {
+            downloader.download(url("/file"), emptyMap(), destination, attempts = 0)
+            fail("a 500 should fail")
+        } catch (error: DownloadException) {
+            assertTrue(error.message.orEmpty().contains("after 1 attempts"))
+        }
+        assertEquals(1, hits)
     }
 
     @Test

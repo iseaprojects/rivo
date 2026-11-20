@@ -28,6 +28,7 @@ import io.github.iseaprojects.rivo.core.model.LibraryKeys
 import io.github.iseaprojects.rivo.core.model.LibraryKind
 import io.github.iseaprojects.rivo.core.model.SearchKind
 import io.github.iseaprojects.rivo.core.search.SearchFilters
+import io.github.iseaprojects.rivo.core.ui.Fuzzy
 import io.github.iseaprojects.rivo.core.theme.ThemeSpec
 import io.github.iseaprojects.rivo.core.ui.KeyBindings
 import io.github.iseaprojects.rivo.data.extract.ChannelTab
@@ -189,9 +190,14 @@ private fun SearchBrowse(env: BrowseEnv, frameKey: String, payload: MenuPayload.
             return@LaunchedEffect
         }
         delay(250)
+        val needle = Fuzzy.fold(text)
         val history = runCatching { env.graph.library.recall(LibraryLimits.SEARCH_HISTORY) }
             .getOrDefault(emptyList())
-            .filter { it.startsWith(text, ignoreCase = true) && !it.equals(text, ignoreCase = true) }
+            .filter { suggestion ->
+                // Same folding as the menu filter: typing "cancion" must recall "canción".
+                val folded = Fuzzy.fold(suggestion.trim())
+                folded.startsWith(needle) && folded != needle
+            }
         val remote = runCatching { env.graph.extractors.default().suggestions(text) }
             .getOrDefault(emptyList())
         suggestions = (history.take(3) + remote).distinct().take(8)

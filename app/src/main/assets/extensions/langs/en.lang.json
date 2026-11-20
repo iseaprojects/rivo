@@ -18,6 +18,7 @@
     "TXT_ANDROID_CFG_DOWNLOAD_DIR": "Download folder",
     "TXT_ANDROID_CFG_DOWNLOAD_DIR_PATH": "Set folder path",
     "TXT_ANDROID_CFG_DOWNLOAD_DIR_PATH_HINT": "Type a path or use the folder picker",
+    "TXT_ANDROID_CFG_DOWNLOAD_RETRIES": "Download retries",
     "TXT_ANDROID_CFG_EDITOR": "Open config editor",
     "TXT_ANDROID_CFG_ENUMERATE": "Enumerate downloads",
     "TXT_ANDROID_CFG_EXTENSIONS": "Extensions folder",

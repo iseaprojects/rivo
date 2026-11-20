@@ -18,6 +18,7 @@
     "TXT_ANDROID_CFG_DOWNLOAD_DIR": "Carpeta de descargas",
     "TXT_ANDROID_CFG_DOWNLOAD_DIR_PATH": "Indicar ruta de la carpeta",
     "TXT_ANDROID_CFG_DOWNLOAD_DIR_PATH_HINT": "Escribe una ruta o usa el selector de carpetas",
+    "TXT_ANDROID_CFG_DOWNLOAD_RETRIES": "Reintentos de descarga",
     "TXT_ANDROID_CFG_EDITOR": "Abrir editor de configuración",
     "TXT_ANDROID_CFG_ENUMERATE": "Enumerar descargas",
     "TXT_ANDROID_CFG_EXTENSIONS": "Carpeta de extensiones",
