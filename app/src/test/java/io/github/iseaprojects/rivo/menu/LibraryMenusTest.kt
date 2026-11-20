@@ -1,5 +1,6 @@
 package io.github.iseaprojects.rivo.menu
 
+import io.github.iseaprojects.rivo.core.config.ConfigKeys
 import io.github.iseaprojects.rivo.core.config.ConfigSnapshot
 import io.github.iseaprojects.rivo.core.i18n.MapStrings
 import io.github.iseaprojects.rivo.core.menu.HandlerIds
@@ -30,11 +31,12 @@ class LibraryMenusTest {
         menuId: String,
         payload: MenuPayload = MenuPayload.None,
         library: MenuLibrary = MenuLibrary.EMPTY,
+        config: ConfigSnapshot = ConfigSnapshot(emptyMap()),
     ): MenuContext = MenuContext(
         menuId = menuId,
         payload = payload,
         strings = MapStrings("en", emptyMap()),
-        config = ConfigSnapshot(emptyMap()),
+        config = config,
         theme = ThemeSpec.FALLBACK,
         themes = emptyList(),
         languages = emptyList(),
@@ -180,6 +182,25 @@ class LibraryMenusTest {
 
         assertEquals(HandlerIds.TOGGLE_CONFIG, row(rows, "cfg.account_feeds").handler)
         assertEquals(HandlerIds.TOGGLE_CONFIG, row(rows, "cfg.search_history").handler)
+    }
+
+    @Test
+    fun `the download retry budget is editable from the config menu`() {
+        val rows = rows(MenuIds.CONFIG, context(MenuIds.CONFIG))
+        val retries = row(rows, "cfg.download_retries")
+
+        assertEquals(MenuIds.CHOICE, retries.targetMenuId)
+        assertEquals(MenuPayload.ConfigValue(ConfigKeys.DOWNLOAD_RETRIES), retries.payload)
+
+        val choices = rows(
+            MenuIds.CHOICE,
+            context(MenuIds.CHOICE, payload = retries.payload, config = ConfigSnapshot(
+                mapOf(ConfigKeys.DOWNLOAD_RETRIES to "5"),
+            )),
+        )
+        assertEquals(listOf("1", "3", "5", "10"), choices.map { it.value })
+        assertEquals(listOf("retry.5"), choices.filter { it.checked == true }.map { it.id })
+        assertEquals(HandlerIds.SELECT_CONFIG, choices.first().handler)
     }
 
     @Test

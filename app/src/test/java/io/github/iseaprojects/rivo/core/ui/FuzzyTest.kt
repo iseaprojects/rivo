@@ -56,6 +56,36 @@ class FuzzyTest {
     }
 
     @Test
+    fun `accented text is matched without the accent`() {
+        assertTrue(Fuzzy.matches("cancion", "Canción de cuna"))
+        assertTrue(Fuzzy.matches("coração", "Coracao de mae"))
+        assertTrue(Fuzzy.matches("anejo", "Añejo reposado"))
+        assertTrue(Fuzzy.matches("uber", "Über alles"))
+    }
+
+    @Test
+    fun `accented and plain spellings score the same`() {
+        assertEquals(
+            Fuzzy.score("cancion", "Canción de cuna"),
+            Fuzzy.score("canción", "Cancion de cuna"),
+        )
+    }
+
+    @Test
+    fun `folding keeps the prefix bonus for accented titles`() {
+        val prefix = Fuzzy.score("cancion", "Canción de cuna")!!
+        val inside = Fuzzy.score("cancion", "una cancion triste")!!
+        assertTrue(prefix > inside)
+    }
+
+    @Test
+    fun `folding is locale independent`() {
+        assertEquals("cancion", Fuzzy.fold("Canción"))
+        // U+0130 decomposes to I plus a combining dot, which folding drops.
+        assertEquals("istanbul", Fuzzy.fold("İstanbul"))
+    }
+
+    @Test
     fun `filter keeps items and scores`() {
         val items = listOf("orange", "apple", "grape")
         assertEquals(listOf("grape"), Fuzzy.filter(items, "grap") { it })

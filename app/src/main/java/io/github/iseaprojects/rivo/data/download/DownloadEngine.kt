@@ -40,24 +40,29 @@ class DownloadEngine(
             workDir.mkdirs()
 
             val details = router.video(task.url)
-            val maxHeight = DownloadPlanner.heightCap(config().string(ConfigKeys.VIDEO_FORMAT))
-            val audioFormat = config().string(ConfigKeys.AUDIO_FORMAT).ifBlank { "m4a" }
+            val settings = config()
+            val maxHeight = DownloadPlanner.heightCap(settings.string(ConfigKeys.VIDEO_FORMAT))
+            val audioFormat = settings.string(ConfigKeys.AUDIO_FORMAT).ifBlank { "m4a" }
+            // The same budget covers every transfer of this task: a merge downloads two
+            // renditions, and a truncated video followed by a truncated audio should not
+            // multiply the user's wait by four.
+            val attempts = settings.int(ConfigKeys.DOWNLOAD_RETRIES, RangedDownloader.DEFAULT_ATTEMPTS)
             val plan = DownloadPlanner.plan(details, task.kind, maxHeight, audioFormat)
                 ?: throw DownloadException("this video has no downloadable stream", retryable = false)
 
             val produced = when (plan) {
-                is DownloadPlan.Direct -> direct(plan.format, workDir, onProgress)
-                is DownloadPlan.Merge -> merge(plan, workDir, onProgress)
+                is DownloadPlan.Direct -> direct(plan.format, workDir, attempts, onProgress)
+                is DownloadPlan.Merge -> merge(plan, workDir, attempts, onProgress)
                 is DownloadPlan.Manifest -> fallback.download(task, workDir, maxHeight, onProgress)
             }
 
-            val target = DownloadFolder.resolve(context, config().string(ConfigKeys.DOWNLOAD_DIR))
+            val target = DownloadFolder.resolve(context, settings.string(ConfigKeys.DOWNLOAD_DIR))
             val directory = DownloadNaming.directory(task)
             val extension = produced.extension.ifBlank {
                 DownloadNaming.extensionFor(planMime(plan), null)
             }
             val existing = target.namesIn(directory).toSet()
-            val enumerate = if (config().bool(ConfigKeys.DOWNLOADS_ENUMERATE, false)) {
+            val enumerate = if (settings.bool(ConfigKeys.DOWNLOADS_ENUMERATE, false)) {
                 existing.size + 1
             } else {
                 null
@@ -102,12 +107,13 @@ class DownloadEngine(
     private suspend fun direct(
         format: StreamFormat,
         workDir: File,
+        attempts: Int,
         onProgress: (Float) -> Unit,
     ): File {
         val url = format.url ?: throw DownloadException("the stream has no media URL", retryable = false)
         val extension = DownloadNaming.extensionFor(format.mimeType, format.container)
         val part = File(workDir, partName(format, extension))
-        val bytes = downloader.download(url, format.httpHeaders, part) { done, total ->
+        val bytes = downloader.download(url, format.httpHeaders, part, attempts) { done, total ->
             onProgress(fraction(done, total.takeIf { it > 0 } ?: format.approxBytes ?: -1))
         }
         if (bytes <= 0) throw DownloadException("the server sent no data")
@@ -122,6 +128,7 @@ class DownloadEngine(
     private suspend fun merge(
         plan: DownloadPlan.Merge,
         workDir: File,
+        attempts: Int,
         onProgress: (Float) -> Unit,
     ): File {
         val videoExt = DownloadNaming.extensionFor(plan.video.mimeType, plan.video.container)
@@ -131,8 +138,8 @@ class DownloadEngine(
 
         // Video is the bulk of the bytes; audio is reported as the last quarter so the
         // bar does not jump backwards when the second transfer starts.
-        down(plan.video, video) { done, total -> onProgress(fraction(done, total) * 0.75f) }
-        down(plan.audio, audio) { done, total -> onProgress(0.75f + fraction(done, total) * 0.2f) }
+        down(plan.video, video, attempts) { done, total -> onProgress(fraction(done, total) * 0.75f) }
+        down(plan.audio, audio, attempts) { done, total -> onProgress(0.75f + fraction(done, total) * 0.2f) }
 
         val merged = File(workDir, "merged.mp4")
         val ok = muxer.mux(video, audio, merged)
@@ -152,10 +159,11 @@ class DownloadEngine(
     private suspend fun down(
         format: StreamFormat,
         part: File,
+        attempts: Int,
         onProgress: (Long, Long) -> Unit,
     ) {
         val url = format.url ?: throw DownloadException("the stream has no media URL", retryable = false)
-        downloader.download(url, format.httpHeaders, part) { done, total ->
+        downloader.download(url, format.httpHeaders, part, attempts) { done, total ->
             onProgress(done, total.takeIf { it > 0 } ?: format.approxBytes ?: -1L)
         }
     }

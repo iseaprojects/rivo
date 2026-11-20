@@ -27,12 +27,14 @@ import okhttp3.Request
  */
 class RangedDownloader(
     private val client: OkHttpClient,
-    private val attempts: Int = 3,
+    private val defaultAttempts: Int = DEFAULT_ATTEMPTS,
 ) {
 
     /**
      * Downloads [url] into [destination], resuming when a part file exists.
      *
+     * [attempts] is the budget for this transfer, normally `CONFIG_DOWNLOAD_RETRIES`;
+     * it is clamped so a hand-edited config cannot hang a queued item for hours.
      * [onProgress] receives (bytes on disk, total bytes or -1 when the server does not
      * say). It is called on a background thread and throttled by the caller.
      */
@@ -40,12 +42,14 @@ class RangedDownloader(
         url: String,
         headers: Map<String, String>,
         destination: File,
+        attempts: Int = defaultAttempts,
         onProgress: (Long, Long) -> Unit = { _, _ -> },
     ): Long = withContext(Dispatchers.IO) {
         destination.parentFile?.mkdirs()
+        val budget = attempts.coerceIn(1, MAX_ATTEMPTS)
         var lastError: Throwable? = null
         var attempt = 0
-        while (attempt < attempts) {
+        while (attempt < budget) {
             attempt++
             try {
                 return@withContext transfer(url, headers, destination, onProgress)
@@ -58,17 +62,17 @@ class RangedDownloader(
             } catch (error: IOException) {
                 lastError = error
             }
-            if (attempt < attempts) {
-                // 1 s, 2 s, 4 s: enough for a flaky mobile link, short enough to stay
-                // inside the user's patience for a queued item.
-                delay(1_000L * (1 shl (attempt - 1)))
-            }
+            if (attempt < budget) delay(backoff(attempt))
         }
         throw DownloadException(
-            "transfer failed after $attempts attempts: ${lastError?.message ?: "unknown error"}",
+            "transfer failed after $budget attempts: ${lastError?.message ?: "unknown error"}",
             lastError,
         )
     }
+
+    /** 1 s, 2 s, 4 s, then 8 s: enough for a flaky link, short enough to stay tolerable. */
+    private fun backoff(attempt: Int): Long =
+        (1_000L shl (attempt - 1).coerceIn(0, 3)).coerceAtMost(MAX_BACKOFF_MS)
 
     private suspend fun transfer(
         url: String,
@@ -142,7 +146,15 @@ class RangedDownloader(
         else -> DownloadException("unexpected HTTP $code", retryable = false)
     }
 
-    private companion object {
-        const val BUFFER_BYTES = 64 * 1024
+    companion object {
+        /** Same default as `CONFIG_DOWNLOAD_RETRIES` in `config.default`. */
+        const val DEFAULT_ATTEMPTS = 3
+
+        private const val BUFFER_BYTES = 64 * 1024
+
+        /** A hand-edited config can ask for anything; ten tries is already ~15 s of waiting. */
+        private const val MAX_ATTEMPTS = 10
+
+        private const val MAX_BACKOFF_MS = 8_000L
     }
 }

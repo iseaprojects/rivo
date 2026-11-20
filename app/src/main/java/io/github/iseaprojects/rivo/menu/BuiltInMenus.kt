@@ -20,6 +20,7 @@ import io.github.iseaprojects.rivo.core.model.LibraryKind
 import io.github.iseaprojects.rivo.core.model.SearchKind
 import io.github.iseaprojects.rivo.core.theme.ThemeSpec
 import io.github.iseaprojects.rivo.data.download.DownloadNaming
+import io.github.iseaprojects.rivo.data.download.RangedDownloader
 import io.github.iseaprojects.rivo.data.extract.YtdlpSupport
 import java.util.Locale
 
@@ -291,6 +292,7 @@ object BuiltInMenus {
                 ConfigKeys.LANG -> languageChoices(ctx)
                 ConfigKeys.PER_PAGE -> pageChoices(ctx)
                 ConfigKeys.CACHE_RETENTION_DAYS -> retentionChoices(ctx)
+                ConfigKeys.DOWNLOAD_RETRIES -> retryChoices(ctx)
                 ConfigKeys.EXTRACTOR -> extractorChoices(ctx)
                 ConfigKeys.YTDLP_CHANNEL -> channelChoices(ctx, YtdlpSupport.updateChannels())
                 ConfigKeys.UPDATE_CHANNEL -> updateChannelChoices(ctx)
@@ -379,6 +381,14 @@ object BuiltInMenus {
                 labelKey = "TXT_ANDROID_CFG_DOWNLOAD_ARCHIVE",
                 configKey = ConfigKeys.DOWNLOAD_ARCHIVE,
                 handler = HandlerIds.TOGGLE_CONFIG,
+            ),
+            choiceTarget(
+                id = "cfg.download_retries",
+                labelKey = "TXT_ANDROID_CFG_DOWNLOAD_RETRIES",
+                configKey = ConfigKeys.DOWNLOAD_RETRIES,
+                detail = ctx.config
+                    .int(ConfigKeys.DOWNLOAD_RETRIES, RangedDownloader.DEFAULT_ATTEMPTS)
+                    .toString(),
             ),
             MenuDsl.toggle(
                 id = "cfg.sponsorblock",
@@ -1210,6 +1220,23 @@ object BuiltInMenus {
         }
     }
 
+    private fun retryChoices(ctx: MenuContext): List<MenuNode> {
+        val current = ctx.config.int(ConfigKeys.DOWNLOAD_RETRIES, RangedDownloader.DEFAULT_ATTEMPTS)
+        return RETRY_PRESETS.map { preset ->
+            val selected = preset == current
+            MenuNode(
+                id = "retry.$preset",
+                label = preset.toString(),
+                detail = if (selected) ctx.strings.text("TXT_ANDROID_ACTIVE") else null,
+                value = preset.toString(),
+                handler = HandlerIds.SELECT_CONFIG,
+                payload = MenuPayload.ConfigValue(ConfigKeys.DOWNLOAD_RETRIES),
+                checked = selected,
+                tone = if (selected) MenuTone.ACCENT else MenuTone.NORMAL,
+            )
+        }
+    }
+
     private fun extractorChoices(ctx: MenuContext): List<MenuNode> {
         val current = ctx.config.string(ConfigKeys.EXTRACTOR, "auto").lowercase()
         val rows = buildList {
@@ -1393,4 +1420,10 @@ object BuiltInMenus {
     }
 
     private val PAGE_PRESETS = listOf(10, 20, 30, 50, 100)
+
+    /**
+     * Retry budgets offered in the config screen. One is useful on a metered link, where
+     * a stalled transfer should fail fast instead of spending the allowance again.
+     */
+    private val RETRY_PRESETS = listOf(1, 3, 5, 10)
 }

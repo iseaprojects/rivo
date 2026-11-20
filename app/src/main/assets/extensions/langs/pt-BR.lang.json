@@ -18,6 +18,7 @@
     "TXT_ANDROID_CFG_DOWNLOAD_DIR": "Pasta de downloads",
     "TXT_ANDROID_CFG_DOWNLOAD_DIR_PATH": "Definir caminho da pasta",
     "TXT_ANDROID_CFG_DOWNLOAD_DIR_PATH_HINT": "Digite um caminho ou use o seletor de pastas",
+    "TXT_ANDROID_CFG_DOWNLOAD_RETRIES": "Tentativas de download",
     "TXT_ANDROID_CFG_EDITOR": "Abrir editor de configuração",
     "TXT_ANDROID_CFG_ENUMERATE": "Enumerar downloads",
     "TXT_ANDROID_CFG_EXTENSIONS": "Pasta de extensões",

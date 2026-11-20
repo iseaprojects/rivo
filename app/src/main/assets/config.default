@@ -64,6 +64,7 @@ CONFIG_DOWNLOAD_DIR=
 CONFIG_DOWNLOADS_ENUMERATE=false
 CONFIG_DOWNLOAD_WIFI_ONLY=false
 CONFIG_DOWNLOAD_CONCURRENCY=2
+# Transfer attempts per rendition, 1..10; 1 fails fast on a metered link.
 CONFIG_DOWNLOAD_RETRIES=3
 # m4a | opus | mp3 (mp3 needs an external encoder, see README).
 CONFIG_AUDIO_FORMAT=m4a
