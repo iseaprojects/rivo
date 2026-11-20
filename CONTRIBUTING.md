@@ -26,16 +26,19 @@ the issue it closes when there is one.
 ## Publishing
 
 Releases are cut from `main`. Bump `appVersion` in `app/build.gradle.kts`, write the notes in
-`docs/releases/<version>.md`, and run:
+`docs/releases/<version>.md`, and merge that through a pull request like any other change:
+`main` requires the `build` check, so a direct push is rejected. Once the bump is on `main`:
 
 ```bash
+git checkout main && git pull
 tools/publish.sh
 ```
 
 The script signs and builds both flavors, copies the APKs to `build/release` as
-`rivo-<version>-fast.apk` and `rivo-<version>-ytdlp.apk`, creates the tag if it is missing,
-pushes `main` and the tag, and creates or updates the GitHub release. Without a notes file it
-falls back to GitHub's generated notes.
+`rivo-<version>-fast.apk` and `rivo-<version>-ytdlp.apk`, tags the commit, pushes the tag and
+creates or updates the GitHub release. It refuses to run when `HEAD` is not the tip of
+`origin/main`, so a forgotten merge fails in a second instead of after two long builds.
+Without a notes file it falls back to GitHub's generated notes.
 
 The tag must match `appVersion` exactly, because the in-app update checker compares the two.
 That feed is read without a token, so the repository has to stay public for the check to work.
