@@ -3,6 +3,21 @@
 All notable changes to Rivo are recorded here. The version keeps the upstream base it was
 ported from (`0.8.7`) plus a Rivo revision.
 
+## 0.8.7-rivo.3 - 2026-11-20
+
+### Fixed
+
+- The filter folds diacritics, so `cancion` finds "Canción" and `videoaula` finds "Videoaula";
+  the search-screen suggestions use the same folding. Case folding is locale-independent now.
+- `CONFIG_DOWNLOAD_RETRIES` is read from the config instead of being documented as honored
+  while every transfer tried three times. It is clamped to 1..10, shared by both tracks of a
+  merged download, and editable from the config screen.
+
+### Changed
+
+- Retry backoff stops growing at 8 seconds, so a large budget cannot stall a queued item.
+- `docs/PARITY.md` names the upstream config keys that are parsed but inert, and why.
+
 ## 0.8.7-rivo.2 - 2026-11-19
 
 First release under the Rivo name. Functionally it is the completed F1-F8 Android port of

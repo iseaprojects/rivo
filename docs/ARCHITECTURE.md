@@ -467,7 +467,9 @@ sweeps stale work directories once at construction, skipping every paused task's
 Merging is MP4-only by design: `MediaMuxer` writes MP4, and an Opus track inside it is not
 portable (D41). An audio download honours `CONFIG_AUDIO_FORMAT` (`m4a` default). Progressive
 transfers go through `RangedDownloader`, which resumes from the part's length, retries
-`CONFIG_DOWNLOAD_RETRIES` times with backoff, and treats `416` as "already complete".
+`CONFIG_DOWNLOAD_RETRIES` times with a 1–8 s backoff, and treats `416` as "already complete".
+The budget is clamped to 1..10 and resolved once per task, so both renditions of a merge share
+it instead of multiplying the wait; it is editable in the config screen.
 
 `DownloadFolder.resolve` turns `CONFIG_DOWNLOAD_DIR` into a `DownloadTarget`:
 
