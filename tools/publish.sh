@@ -38,6 +38,16 @@ if [[ -n "$(git status --porcelain)" ]]; then
     echo "warning: uncommitted changes; the tag will point at the last commit, not this tree" >&2
 fi
 
+# main requires the `build` check, so a direct push of the version bump is rejected by the
+# branch hook. Fail early with the fix instead of after two long builds.
+git fetch --quiet origin main
+if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
+    echo "error: HEAD is not the tip of origin/main." >&2
+    echo "       main needs the 'build' check, so the version bump lands through a pull request:" >&2
+    echo "       open one, wait for CI, merge it, then run this script from the updated main." >&2
+    exit 1
+fi
+
 echo "==> Rivo $version"
 
 if [[ "${1:-}" == "--unsigned" ]]; then
