@@ -5,6 +5,7 @@
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2ac3de?style=flat-square" alt="MIT"></a>
 <a href="#install"><img src="https://img.shields.io/badge/Android-8.0%2B-2ac3de?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+"></a>
 <a href="#install"><img src="https://img.shields.io/github/v/release/iseaprojects/rivo?label=version&style=flat-square&color=2ac3de" alt="Latest release"></a>
+<a href="../../actions/workflows/android.yml"><img src="https://github.com/iseaprojects/rivo/actions/workflows/android.yml/badge.svg?branch=main" alt="CI"></a>
 </p>
 <p><a href="README.md">English</a> · <a href="README.es.md">Español</a></p>
 <p><img src="docs/images/main-menu.png" alt="The Rivo main menu" width="280"></p>
