@@ -134,6 +134,39 @@ class RangedDownloaderTest {
     }
 
     @Test
+    fun `a part file from a different rendition is discarded, not kept`() = runBlocking {
+        // The reader is bigger than the resource it claims to resume, which a CDN answers
+        // with 416. Trusting the part file would hand a corrupt file to the muxer.
+        server.createContext("/file") { exchange ->
+            val range = exchange.requestHeaders.getFirst("Range")
+            rangeRequests += range ?: ""
+            val start = range?.removePrefix("bytes=")?.substringBefore('-')?.toIntOrNull()
+            if (start == null) {
+                respond(exchange, 200, payload)
+                return@createContext
+            }
+            if (start >= payload.size) {
+                exchange.responseHeaders.add("Content-Range", "bytes */${payload.size}")
+                exchange.sendResponseHeaders(416, -1)
+                exchange.close()
+                return@createContext
+            }
+            exchange.responseHeaders.add(
+                "Content-Range",
+                "bytes $start-${payload.size - 1}/${payload.size}",
+            )
+            respond(exchange, 206, payload.copyOfRange(start, payload.size))
+        }
+        destination.writeBytes(ByteArray(payload.size + 900) { 'z'.code.toByte() })
+
+        val written = downloader.download(url("/file"), emptyMap(), destination)
+
+        assertEquals(payload.size.toLong(), written)
+        assertArrayEquals(payload, destination.readBytes())
+        assertEquals(listOf("bytes=${payload.size + 900}-", ""), rangeRequests)
+    }
+
+    @Test
     fun `a complete part file answered with 416 is reported as written`() = runBlocking {
         ranged()
         destination.writeBytes(payload.copyOfRange(0, payload.size))

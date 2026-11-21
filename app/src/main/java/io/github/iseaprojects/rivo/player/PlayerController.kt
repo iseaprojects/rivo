@@ -99,24 +99,28 @@ class PlayerController(private val controller: MediaController) {
             metadata?.extras?.getString(PlayerExtras.KEY),
         )
         val textParams = controller.trackSelectionParameters
+        val index = controller.currentMediaItemIndex
+        // `mediaItemCount` is only the prefetch window; the request's real length travels
+        // in the extras so "1 of 26" does not become "1 of 3". Next/Previous follow the
+        // same rule: for the seconds before the next item is resolved, the queue length is
+        // the truth, not the window.
+        val queueSize = extras.queueSize.takeIf { it > 0 } ?: controller.mediaItemCount
         state = PlayerUiState(
             title = metadata?.title?.toString().orEmpty(),
             artist = metadata?.artist?.toString().orEmpty(),
             artworkUri = metadata?.artworkUri?.toString(),
             isPlaying = controller.isPlaying,
             isBuffering = controller.playbackState == Player.STATE_BUFFERING,
-            hasNext = controller.hasNextMediaItem(),
-            hasPrevious = controller.hasPreviousMediaItem(),
+            hasNext = controller.hasNextMediaItem() || index + 1 < queueSize,
+            hasPrevious = controller.hasPreviousMediaItem() || index > 0,
             positionMs = controller.currentPosition.coerceAtLeast(0),
             durationMs = controller.duration.takeIf { it > 0 }
                 ?: metadata?.durationMs
                 ?: 0L,
             bufferedMs = controller.bufferedPosition.coerceAtLeast(0),
             speed = controller.playbackParameters.speed,
-            queueIndex = controller.currentMediaItemIndex + 1,
-            // `mediaItemCount` is only the prefetch window; the request's real length
-            // travels in the extras so "1 of 26" does not become "1 of 3".
-            queueSize = extras.queueSize.takeIf { it > 0 } ?: controller.mediaItemCount,
+            queueIndex = index + 1,
+            queueSize = queueSize,
             extras = extras,
             subtitles = subtitleChoices(item),
             subtitlesOff = C.TRACK_TYPE_TEXT in textParams.disabledTrackTypes,
@@ -154,12 +158,29 @@ class PlayerController(private val controller: MediaController) {
     fun pause() = controller.pause()
 
     fun seekTo(positionMs: Long) {
-        controller.seekTo(positionMs.coerceIn(0, state.durationMs.coerceAtLeast(0)))
-        state = state.copy(positionMs = positionMs)
+        // A zero duration means "not known yet", not "everything is at zero": clamping
+        // against it turned every chapter tap into a seek to the start, and the stored
+        // position then disagreed with the player until the next tick.
+        val target = if (state.durationMs > 0) {
+            positionMs.coerceIn(0, state.durationMs)
+        } else {
+            positionMs.coerceAtLeast(0)
+        }
+        controller.seekTo(target)
+        state = state.copy(positionMs = target)
     }
 
     fun next() {
-        if (controller.hasNextMediaItem()) controller.seekToNextMediaItem()
+        if (controller.hasNextMediaItem()) {
+            controller.seekToNextMediaItem()
+            return
+        }
+        // The queue is longer than the prefetch window: ask the service to resolve and
+        // append the next item, then advance. Checking only `hasNextMediaItem()` made Next
+        // do nothing for the first seconds of every playlist while the UI said "1 of 26".
+        if (state.queueIndex < state.queueSize) {
+            controller.sendCustomCommand(PlayerCommands.next, Bundle.EMPTY)
+        }
     }
 
     fun previous() {
@@ -209,7 +230,7 @@ class PlayerController(private val controller: MediaController) {
         item?.localConfiguration?.subtitleConfigurations.orEmpty().map { config ->
             SubtitleChoice(
                 language = config.language.orEmpty(),
-                label = config.label?.toString()
+                label = config.label
                     ?: config.language
                     ?: config.mimeType
                     ?: "",

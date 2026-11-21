@@ -15,6 +15,7 @@ object PlayerCommands {
 
     const val SET_QUEUE = "io.github.iseaprojects.rivo.player.SET_QUEUE"
     const val SET_STREAM = "io.github.iseaprojects.rivo.player.SET_STREAM"
+    const val NEXT = "io.github.iseaprojects.rivo.player.NEXT"
     const val STOP = "io.github.iseaprojects.rivo.player.STOP"
 
     const val EXTRA_REQUEST = "request"
@@ -23,9 +24,10 @@ object PlayerCommands {
 
     val setQueue: SessionCommand = SessionCommand(SET_QUEUE, Bundle.EMPTY)
     val setStream: SessionCommand = SessionCommand(SET_STREAM, Bundle.EMPTY)
+    val next: SessionCommand = SessionCommand(NEXT, Bundle.EMPTY)
     val stop: SessionCommand = SessionCommand(STOP, Bundle.EMPTY)
 
-    val all: List<SessionCommand> = listOf(setQueue, setStream, stop)
+    val all: List<SessionCommand> = listOf(setQueue, setStream, next, stop)
 }
 
 /** Broadcasts the service sends to the visible player when extraction cannot recover. */

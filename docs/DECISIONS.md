@@ -826,19 +826,21 @@ and the menu states that instead of pretending parity.
 
 ---
 
-## D45 - Update checks read upstream releases and stop at the browser
+## D45 - Update checks read this repository's releases and stop at the browser
 
 **Decision.** `CONFIG_CHECK_FOR_UPDATES` with `CONFIG_UPDATE_CHANNEL` (stable, prerelease)
-enables a check against the upstream yt-x GitHub releases. Tags are compared with
-`VersionNumbers` against the upstream version this build ports. The check runs at startup
-and when the screen opens, at most once every six hours unless "Check again" is pressed, and
-failures are not cached. An available release shows its tag, name, date, notes and an "Open
+enables a check against Rivo's own GitHub releases (`UPDATE_MANIFEST`), compared with
+`VersionNumbers` against `BuildConfig.RIVO_VERSION`. The check runs at startup and when the
+screen opens, at most once every six hours unless "Check again" is pressed, and failures are
+not cached. The six-hour window is stored in preferences, so a cold start does not turn into
+one request per launch. An available release shows its tag, name, date, notes and an "Open
 release page" row; nothing is downloaded or installed.
 
-**Why.** The Android port has no release feed of its own, so the only honest claim is "a
-newer yt-x release exists than the one this build ports". Opening the page leaves the update
-decision and the APK provenance with the user, and avoids wrapping a third-party artifact in
-an in-app installer.
+**Why.** The Android port had no release feed of its own in the first builds, so the only
+honest claim was "a newer yt-x release exists than the one this build ports". Now that the
+repository publishes `0.8.7-rivo.N` tags, the row tracks the port itself; opening the page
+leaves the update decision and the APK provenance with the user, and avoids wrapping a
+third-party artifact in an in-app installer.
 
 **Cost.** The row cannot install anything; a user who expects a one-tap update gets a browser
 instead, which the README states.

@@ -197,8 +197,11 @@ class DownloadService : android.app.Service() {
         scope.launch {
             repository.store.update(id) { current ->
                 // A transfer that already reached DONE owns its file; neither pause nor
-                // cancel may relabel finished work.
-                if (current.state == DownloadState.DONE) {
+                // cancel may relabel finished work. Anything that is no longer RUNNING has
+                // been relabelled already (cancel writes CANCELLED first, pause writes
+                // PAUSED first), so rewriting it here would resurrect a stale state — the
+                // case that made a pause followed by a resume land as paused.
+                if (current.state != DownloadState.RUNNING) {
                     current
                 } else {
                     current.copy(

@@ -37,9 +37,9 @@ object Fuzzy {
                     val sub = subsequenceScore(token, haystack) ?: return null
                     sub
                 }
-                substring == 0 -> 1200 - token.length
-                substring > 0 && isBoundary(haystack[substring - 1]) -> 900 - substring
-                else -> 500 - substring
+                substring == 0 -> START_SCORE - penalty(token.length)
+                isBoundary(haystack[substring - 1]) -> BOUNDARY_SCORE - penalty(substring)
+                else -> ANYWHERE_SCORE - penalty(substring)
             }
         }
         return total
@@ -65,8 +65,19 @@ object Fuzzy {
             last = found
             index = found + 1
         }
-        return 100 - gaps
+        return SUBSEQUENCE_SCORE - gaps
     }
+
+    /**
+     * The cost of a match sitting [position] characters in, capped at [MAX_POSITION_PENALTY].
+     *
+     * The cap is what keeps the ranking honest: unbounded, a match at the end of a long
+     * description scored below a scattered subsequence match, so "digits" could outrank a
+     * title that contains the query verbatim. Capped, every substring match scores at least
+     * [ANYWHERE_SCORE] - [MAX_POSITION_PENALTY], which is still above the best subsequence
+     * ([SUBSEQUENCE_SCORE] with no gaps).
+     */
+    private fun penalty(position: Int): Int = position.coerceAtMost(MAX_POSITION_PENALTY)
 
     private fun isBoundary(char: Char): Boolean =
         char.isWhitespace() || char == '-' || char == '_' || char == '/' || char == '.' || char == ':'
@@ -82,4 +93,19 @@ object Fuzzy {
 
     private val WHITESPACE = Regex("\\s+")
     private val COMBINING_MARKS = Regex("\\p{Mn}+")
+
+    /** Query at position 0: the strongest signal, minus the length of the token typed. */
+    private const val START_SCORE = 1200
+
+    /** Query right after a separator: "git" in "using git daily". */
+    private const val BOUNDARY_SCORE = 900
+
+    /** Query buried inside a word: "git" in "digits". */
+    private const val ANYWHERE_SCORE = 500
+
+    /** Best possible subsequence score, before gaps are subtracted. */
+    private const val SUBSEQUENCE_SCORE = 100
+
+    /** Cap on the position penalty, so [ANYWHERE_SCORE] - this stays above a subsequence. */
+    private const val MAX_POSITION_PENALTY = 200
 }

@@ -244,6 +244,11 @@ class PlaybackService : MediaSessionService() {
                     SessionResult.RESULT_SUCCESS
                 }
 
+                PlayerCommands.NEXT -> {
+                    coordinator.skipToNext()
+                    SessionResult.RESULT_SUCCESS
+                }
+
                 PlayerCommands.STOP -> {
                     stopPlayback()
                     SessionResult.RESULT_SUCCESS

@@ -26,4 +26,17 @@ object HttpClients {
     }
 
     fun newBuilder(): OkHttpClient.Builder = shared.newBuilder()
+
+    /**
+     * The same client without the whole-call deadline, for transfers that are expected to
+     * take minutes.
+     *
+     * `callTimeout` bounds one call end to end, response body included: a 400 MB video over
+     * a slow link fails 45 seconds in, and the retry budget spends itself on the same wall.
+     * Per-read and per-connect timeouts stay, so a server that stops sending still fails
+     * instead of hanging. The connection pool and TLS sessions are shared with [shared].
+     */
+    val transfers: OkHttpClient by lazy {
+        shared.newBuilder().callTimeout(0, TimeUnit.SECONDS).build()
+    }
 }

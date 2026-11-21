@@ -1,7 +1,9 @@
 package io.github.iseaprojects.rivo.data.download
 
 import java.io.File
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -51,11 +54,15 @@ class DownloadStore(
         if (loaded.get()) return
         lock.withLock {
             if (loaded.get()) return
-            loaded.set(true)
+            // A read that fails is retried, and a corrupt file is moved aside instead of
+            // being overwritten by the next persist. Marking the store "loaded" before the
+            // read used to turn one transient error into an empty queue for the whole
+            // session, with the file still on disk and no way back to it.
             val stored = withContext(Dispatchers.IO) { read() }
             _tasks.value = stored.map { task ->
                 if (task.state == DownloadState.RUNNING) task.copy(state = DownloadState.QUEUED) else task
             }
+            loaded.set(true)
         }
     }
 
@@ -155,10 +162,43 @@ class DownloadStore(
         return active + finished.take(budget)
     }
 
-    private fun read(): List<DownloadTask> = runCatching {
+    /**
+     * Reads the queue file.
+     *
+     * A missing file is an empty queue. A file that cannot be parsed, or that cannot be read
+     * at all, is a *corrupt* queue: it is moved to `queue.json.corrupt` before the store
+     * adopts an empty list, so the next `persist` cannot silently destroy the only copy of
+     * the user's pending downloads. The old code swallowed the failure and reported an empty
+     * queue, which is the same thing with the evidence gone.
+     */
+    private fun read(): List<DownloadTask> {
         if (!file.exists()) return emptyList()
-        json.decodeFromString(QueueFile.serializer(), file.readText()).tasks
-    }.getOrDefault(emptyList())
+        val text = try {
+            file.readText()
+        } catch (error: IOException) {
+            Log.w(TAG, "download queue unreadable, moving it aside", error)
+            quarantine()
+            return emptyList()
+        }
+        return try {
+            json.decodeFromString(QueueFile.serializer(), text).tasks
+        } catch (error: SerializationException) {
+            Log.w(TAG, "download queue corrupt, moving it aside", error)
+            quarantine()
+            emptyList()
+        }
+    }
+
+    /** Keeps a corrupt queue for inspection; the queue itself restarts empty. */
+    private fun quarantine() {
+        runCatching {
+            val target = File(file.parentFile, "${file.name}.corrupt")
+            // renameTo refuses an existing target on some filesystems; the newest corrupt
+            // copy is the interesting one anyway.
+            if (target.exists()) target.delete()
+            file.renameTo(target)
+        }.onFailure { error -> Log.w(TAG, "could not move the corrupt queue aside", error) }
+    }
 
     private fun write(tasks: List<DownloadTask>) {
         runCatching {
@@ -180,6 +220,8 @@ class DownloadStore(
     companion object {
         const val MAX_HISTORY = 200
         const val FILE_NAME = "queue.json"
+
+        private const val TAG = "rivo-downloads"
 
         private val REVIVABLE = setOf(
             DownloadState.DONE,

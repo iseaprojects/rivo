@@ -59,7 +59,7 @@ object ExternalPlayer {
             subtitles = subtitles,
             startAtMs = details.startAtSeconds * 1000L,
             audioOnly = mode == PlayMode.AUDIO,
-            extraArgs = config.string(ConfigKeys.MPV_ARGS).takeIf { it.isNotBlank() },
+            mpvArgs = config.string(ConfigKeys.MPV_ARGS).takeIf { it.isNotBlank() },
         )
 
         return try {
@@ -99,7 +99,7 @@ object ExternalPlayer {
         subtitles: List<String>,
         startAtMs: Long,
         audioOnly: Boolean,
-        extraArgs: String?,
+        mpvArgs: String?,
     ): Intent {
         val uri = Uri.parse(url)
         val mime = if (audioOnly) "audio/*" else "video/*"
@@ -126,9 +126,20 @@ object ExternalPlayer {
                 }
                 val args = buildList {
                     if (startAtMs > 0) add("--start=${startAtMs / 1000.0}")
-                    extraArgs?.split(' ')?.filter { it.isNotBlank() }?.forEach { add(it) }
+                    mpvArgs?.split(' ')?.filter { it.isNotBlank() }?.forEach { add(it) }
                 }
                 if (args.isNotEmpty()) intent.putExtra("args", args.toTypedArray())
+            }
+
+            // VLC's documented hand-off extras. `position` is milliseconds and only counts
+            // when `from_start` is false; without them "resume at" and the title were
+            // dropped on hand-off. VLC has no extra for libVLC options and its
+            // `subtitles_location` takes a local path, so `CONFIG_VLC_ARGS` and the
+            // subtitle sidecars stay internal-only (see docs/PARITY.md).
+            VLC -> {
+                intent.putExtra("title", title)
+                intent.putExtra("from_start", false)
+                if (startAtMs > 0) intent.putExtra("position", startAtMs)
             }
 
             else -> Unit

@@ -50,6 +50,23 @@ class FuzzyTest {
     }
 
     @Test
+    fun `a match late in the text still beats a scattered one`() {
+        // Unbounded position penalties made a verbatim match 400 characters in score lower
+        // than a subsequence match, which is the wrong order for a filter.
+        val late = "a".repeat(400) + "needle"
+        val scattered = "n-e-e-d-l-e"
+        val lateScore = Fuzzy.score("needle", late)!!
+        assertTrue(lateScore > Fuzzy.score("needle", scattered)!!)
+        assertTrue(lateScore > 0)
+    }
+
+    @Test
+    fun `a long query still outranks a word boundary match`() {
+        val long = "x".repeat(400)
+        assertEquals(1200 - 200, Fuzzy.score(long, long + " tail")!!)
+    }
+
+    @Test
     fun `case is ignored`() {
         assertTrue(Fuzzy.matches("LOFI", "lofi girl"))
         assertTrue(Fuzzy.matches("lofi", "LOFI GIRL"))

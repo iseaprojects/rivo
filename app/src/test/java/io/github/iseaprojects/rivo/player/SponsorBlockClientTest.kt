@@ -13,15 +13,24 @@ import org.junit.Test
 class SponsorBlockClientTest {
 
     @Test
-    fun `segments are converted from seconds to milliseconds`() {
+    fun `the flat skipSegments response is decoded`() {
+        // GET /api/skipSegments?videoID= answers with this shape: an array of segments.
         val body = """
             [
               {
-                "videoID": "abc12345678",
-                "segments": [
-                  {"category": "sponsor", "segment": [12.5, 30.25]},
-                  {"category": "selfpromo", "segment": [60, 61.5]}
-                ]
+                "segment": [12.5, 30.25],
+                "UUID": "a1b2c3d4",
+                "category": "sponsor",
+                "videoDuration": 300,
+                "actionType": "skip",
+                "locked": 0,
+                "votes": 3
+              },
+              {
+                "segment": [60, 61.5],
+                "UUID": "e5f6a7b8",
+                "category": "selfpromo",
+                "actionType": "skip"
               }
             ]
         """.trimIndent()
@@ -36,16 +45,32 @@ class SponsorBlockClientTest {
     }
 
     @Test
-    fun `unknown categories and malformed entries are ignored`() {
+    fun `the grouped hash-prefix shape still works`() {
         val body = """
             [
               {
+                "videoID": "abc12345678",
                 "segments": [
-                  {"category": "poi", "segment": [10]},
-                  {"category": "intro", "segment": [5, 5]},
-                  {"category": "outro", "segment": [90, 95]}
+                  {"category": "sponsor", "segment": [12.5, 30.25]}
                 ]
               }
+            ]
+        """.trimIndent()
+
+        val segments = SponsorBlockClient().parse(body)
+
+        assertEquals(1, segments.size)
+        assertEquals(12_500L, segments.first().startMs)
+    }
+
+    @Test
+    fun `unknown categories and malformed entries are ignored`() {
+        val body = """
+            [
+              {"category": "poi", "segment": [10]},
+              {"category": "intro", "segment": [5, 5]},
+              {"category": "", "segment": [1, 2]},
+              {"category": "outro", "segment": [90, 95]}
             ]
         """.trimIndent()
 

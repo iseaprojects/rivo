@@ -25,7 +25,7 @@ class DownloadEngine(
     private val router: ExtractorRouter,
     private val config: () -> ConfigSnapshot,
     private val fallback: DownloadFallback,
-    private val downloader: RangedDownloader = RangedDownloader(HttpClients.shared),
+    private val downloader: RangedDownloader = RangedDownloader(HttpClients.transfers),
     private val muxer: Mp4Muxer = Mp4Muxer(),
 ) {
 
@@ -67,9 +67,8 @@ class DownloadEngine(
             } else {
                 null
             }
-            val fileName = uniqueName(
+            val fileName = DownloadNaming.uniqueName(
                 task = task,
-                directory = directory,
                 extension = extension,
                 enumerate = enumerate,
                 existing = existing,
@@ -166,19 +165,6 @@ class DownloadEngine(
         downloader.download(url, format.httpHeaders, part, attempts) { done, total ->
             onProgress(done, total.takeIf { it > 0 } ?: format.approxBytes ?: -1L)
         }
-    }
-
-    /** Adds ` [<id>]` only when the plain name is taken, keeping the common case clean. */
-    private fun uniqueName(
-        task: DownloadTask,
-        directory: String,
-        extension: String,
-        enumerate: Int?,
-        existing: Set<String>,
-    ): String {
-        val plain = DownloadNaming.fileName(task, extension, enumerate)
-        if (plain !in existing) return plain
-        return DownloadNaming.fileName(task, extension, enumerate, suffix = " [${task.videoId}]")
     }
 
     private fun planMime(plan: DownloadPlan): String? = when (plan) {

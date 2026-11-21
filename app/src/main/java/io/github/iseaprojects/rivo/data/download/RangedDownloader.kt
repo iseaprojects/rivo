@@ -95,9 +95,17 @@ class RangedDownloader(
             coroutineContext.ensureActive()
             val code = response.code
             if (code == 416 && existing > 0) {
-                // The part file is already the whole file (or the server's idea of the
-                // resource is smaller than it is). The engine verifies the size.
-                return existing
+                // The server says the range starts past the end. That is either a part
+                // file that is already the whole thing, or a part file left over from a
+                // different rendition; only the byte count in `Content-Range: bytes */N`
+                // tells them apart.
+                val total = response.header("Content-Range")?.substringAfterLast('/')?.toLongOrNull() ?: -1L
+                if (total <= 0 || total == existing) return existing
+                destination.delete()
+                throw DownloadException(
+                    "the part file holds $existing bytes but the server has $total",
+                    retryable = true,
+                )
             }
             if (!response.isSuccessful) {
                 throw httpFailure(code)
@@ -152,7 +160,10 @@ class RangedDownloader(
 
         private const val BUFFER_BYTES = 64 * 1024
 
-        /** A hand-edited config can ask for anything; ten tries is already ~15 s of waiting. */
+        /**
+         * A hand-edited config can ask for anything. Ten tries spend 1+2+4+8×6 = 55 s of
+         * backoff before the last attempt, which is already a long time to wait on a queue.
+         */
         private const val MAX_ATTEMPTS = 10
 
         private const val MAX_BACKOFF_MS = 8_000L

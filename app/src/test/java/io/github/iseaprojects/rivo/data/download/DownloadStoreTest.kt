@@ -191,6 +191,37 @@ class DownloadStoreTest {
     }
 
     @Test
+    fun `a corrupt queue file is moved aside instead of overwritten`() = runBlocking {
+        file.parentFile?.mkdirs()
+        file.writeText("{not json")
+        val store = DownloadStore(file)
+        store.load()
+
+        // The broken bytes are the only copy of whatever the user had queued, so they are
+        // kept for a bug report instead of being replaced by the next persist.
+        val quarantined = File(directory, "${file.name}.corrupt")
+        assertTrue("the corrupt queue was overwritten", quarantined.exists())
+        assertEquals("{not json", quarantined.readText())
+
+        store.enqueue(listOf(task()))
+        assertTrue("the store stayed unloaded", store.tasks.value.isNotEmpty())
+    }
+
+    @Test
+    fun `an unreadable queue file does not strand the store`() = runBlocking {
+        // A directory where the file should be: `exists()` is true and `readText()` throws.
+        file.mkdirs()
+        val store = DownloadStore(file)
+        store.load()
+        assertTrue(store.tasks.value.isEmpty())
+
+        store.enqueue(listOf(task(id = "after")))
+        val recovered = DownloadStore(file)
+        recovered.load()
+        assertEquals(listOf("after"), recovered.tasks.value.map { it.videoId })
+    }
+
+    @Test
     fun `the queue file is valid json on disk`() = runBlocking {
         val store = DownloadStore(file)
         store.enqueue(listOf(task()))
