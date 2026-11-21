@@ -2,6 +2,7 @@ package io.github.iseaprojects.rivo.di
 
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
 import io.github.iseaprojects.rivo.BuildConfig
 import io.github.iseaprojects.rivo.core.cache.CacheRetention
 import io.github.iseaprojects.rivo.core.commands.CustomCommandStore
@@ -115,9 +116,7 @@ class AppGraph(context: Context) {
         config = { runtime.snapshot.value },
         scope = scope,
         lastUpToDateCheck = { updatePrefs.getLong(KEY_LAST_UP_TO_DATE, 0L) },
-        rememberUpToDateCheck = { at ->
-            updatePrefs.edit().putLong(KEY_LAST_UP_TO_DATE, at).apply()
-        },
+        rememberUpToDateCheck = { at -> updatePrefs.edit { putLong(KEY_LAST_UP_TO_DATE, at) } },
     )
 
     private val updatePrefs by lazy {

@@ -4,12 +4,12 @@ import android.os.Bundle
 import androidx.media3.session.SessionCommand
 
 /**
- * The two control-plane messages the activity sends to the playback service.
+ * The control-plane messages the activity sends to the playback service.
  *
- * Everything else (play, pause, seek, next, speed, track selection) is a normal Media3
- * player command and works from the notification and Bluetooth too. These two exist
- * because they need the service's extraction results: starting a queue, and rebuilding
- * the current item for a different quality or audio track.
+ * Everything else (play, pause, seek, speed, track selection) is a normal Media3 player
+ * command and works from the notification and Bluetooth too. These exist because they need
+ * the service's extraction results: starting a queue, rebuilding the current item for a
+ * different quality or audio track, and advancing to an item that has not been resolved yet.
  */
 object PlayerCommands {
 
