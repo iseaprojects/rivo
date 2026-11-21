@@ -66,18 +66,24 @@ mkdir -p "$out"
 rm -f "$out"/*.apk
 assets=()
 for flavor in fast ytdlp; do
+    directory="app/build/outputs/apk/$flavor/release"
+    signed="$directory/app-$flavor-release.apk"
+    # `tools/release.sh` runs in a subshell, so its RIVO_* exports never reach this script;
+    # the file name is the only reliable signal of whether the build was signed.
+    unsigned="$directory/app-$flavor-release-unsigned.apk"
     found=""
-    for apk in "app/build/outputs/apk/$flavor/release/"*.apk; do
-        [[ -f "$apk" ]] || continue
-        # An unsigned build also lands here; it must never be published as the flavor.
-        if [[ -z "${RIVO_KEYSTORE:-}" && "$apk" == *-unsigned.apk ]]; then
-            found="$apk"
-        elif [[ -n "${RIVO_KEYSTORE:-}" && "$apk" != *-unsigned.apk ]]; then
-            found="$apk"
-        fi
-    done
+    if [[ "${1:-}" == "--unsigned" ]]; then
+        [[ -f "$unsigned" ]] && found="$unsigned"
+        [[ -z "$found" && -f "$signed" ]] && found="$signed"
+    else
+        [[ -f "$signed" ]] && found="$signed"
+    fi
     if [[ -z "$found" ]]; then
-        echo "error: no release APK for the $flavor flavor" >&2
+        if [[ -f "$unsigned" ]]; then
+            echo "error: the $flavor build is unsigned; run tools/release.sh with signing material" >&2
+        else
+            echo "error: no release APK for the $flavor flavor" >&2
+        fi
         exit 1
     fi
     target="$out/rivo-$version-$flavor.apk"
