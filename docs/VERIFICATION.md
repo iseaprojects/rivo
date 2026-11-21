@@ -13,12 +13,12 @@ project is unbuilt or stubbed.
 | Task | Result |
 | --- | --- |
 | `:app:compileFastDebugKotlin` | OK — no errors (upstream NewPipeExtractor deprecation warnings only) |
-| `:app:assembleFastDebug` | OK - `app-fast-debug.apk`, 28.12 MB |
-| `:app:assembleYtdlpDebug` | OK - `app-ytdlp-debug.apk`, 105.50 MB (CPython + aria2 for 4 ABIs) |
-| `:app:assembleFastRelease` | OK - `app-fast-release-unsigned.apk`, 3.82 MB (R8 + resource shrinking) |
-| `:app:testFastDebugUnitTest` | OK - 344 tests, 0 failures, 7 skipped (`RIVO_LIVE` opt-in), 39 suites |
-| `:app:testYtdlpDebugUnitTest` | OK - 344 tests, 0 failures, 7 skipped, 39 suites |
-| `:app:lintFastDebug` | OK — 0 errors, 19 warnings (all intentional, see below) |
+| `:app:assembleFastDebug` | OK - `app-fast-debug.apk`, 28.10 MB |
+| `:app:assembleYtdlpDebug` | OK - `app-ytdlp-debug.apk`, 105.51 MB (CPython + aria2 for 4 ABIs) |
+| `:app:assembleFastRelease` | OK - `app-fast-release.apk`, 4.03 MB (R8 + resource shrinking; 3.82 MB before the 0.8.7-rivo.4 additions) |
+| `:app:testFastDebugUnitTest` | OK - 371 tests, 0 failures, 7 skipped (`RIVO_LIVE` opt-in), 41 suites |
+| `:app:testYtdlpDebugUnitTest` | OK - 371 tests, 0 failures, 7 skipped, 41 suites |
+| `:app:lintFastDebug` | OK - 0 errors, 19 warnings (all intentional, see below) |
 
 `aapt2 dump badging` on the debug APK:
 
@@ -71,6 +71,9 @@ or the manifest:
 - `ReportShortcutUsage` — `ShortcutPublisher` creates dynamic shortcuts but the app has no
   "used" event to report: a shortcut either launches the deep link or is never tapped inside
   this process, so there is nothing to rank.
+- `AndroidGradlePluginVersion` — lint notices that AGP 9.5.2 exists. It is tracked by the
+  Dependabot pull request rather than by editing the version inline, and it disappears once
+  that lands.
 
 Components are declared in the manifest by the phase that implements them (player and
 playback service in F5, download service in F6, tile/receiver/widget in F7), so the
@@ -822,6 +825,41 @@ Playback and downloads belong to F5–F6; their checklist entries land with thos
 Room-backed screens are covered by the F4 section, keyboard bindings and the search filter
 UI by the F3 section above.
 
+## Defect pass - 0.8.7-rivo.4
+
+The 0.8.7-rivo.4 branch was audited module by module instead of being driven from a checklist.
+Every fix below has a regression test where the behaviour is testable off-device; the two
+player fixes are covered by tests for the parsing and by the source-building path, and were then
+exercised on the emulator at the level stated.
+
+| Check | Result |
+| --- | --- |
+| `:app:testFastDebugUnitTest` | OK - 371 tests, 0 failures, 7 skipped (`RIVO_LIVE` opt-in), 41 suites |
+| `:app:testYtdlpDebugUnitTest` | OK - 371 tests, 0 failures, 7 skipped, 41 suites |
+| `:app:lintFastDebug` | OK - 0 errors, 19 warnings + 1 hint |
+| `:app:assembleFastDebug` / `:app:assembleYtdlpDebug` | OK - 28.10 MB / 105.51 MB |
+| `tools/check_strings.py` | 420 referenced, 543 defined, 0 missing |
+| `tools/publish.sh` | both release flavors packed and uploaded; release assets are 4 034 991 and 83 910 902 bytes |
+
+- **Install.** `rivo-0.8.7-rivo.4-fast.apk` (signed, the published asset) installs over
+  `0.8.7-rivo.3` on Pixel_8_API_36 and reports `versionName=0.8.7-rivo.4-fast`.
+- **Update row.** `rivo://misc`, filter `update`: the row reads `Update / 0.8.7-rivo.4`, opens
+  and shows `Up to date / 0.8.7-rivo.4` with `Check again`. This exercises the new
+  preferences-backed six-hour window: the screen renders `Current`, not `Idle`.
+- **Playback.** A watch link opens the menu, `Watch` starts the session, and logcat shows
+  `rivo-player: queue started: 1 items, mode=VIDEO, subtitles=[en, es]` followed by both a video
+  and an audio `MediaCodec`; the player header reads the title, `0:03` of `10:34`, `1 of 1` and
+  `2160p60`. The queue size comes from the item extras, which is the field the Next/Previous
+  fix relies on.
+- **Not device-exercised.** Caption *rendering*: the sheet lists the configured languages, but
+  the test title has no downloadable track, so the merged sidecar is proven to be constructed
+  and not proven to draw. SponsorBlock skipping: the same video has no submitted segments.
+  Both would need a title with a caption track and a sponsored segment; the parser and the
+  merge ordering are unit-tested (`SponsorBlockClientTest`, `PlaybackCoordinator` review).
+- **Queue durability.** `DownloadStoreTest` now covers a corrupt `queue.json` being moved to
+  `queue.json.corrupt` and a directory-in-place-of-file not stranding the queue; the paths are
+  not reproducible from the UI without root.
+
 ## F8 - Close-out
 
 The port is feature-complete against the F1-F7 scope; this section states what "done" means,
@@ -831,12 +869,12 @@ it does not add behaviour.
   external constraints rather than missing wiring: account feeds need the ytdlp flavor plus
   cookies, Android Auto has no host in the emulator, the yt-dlp in-app update is shipped but
   was not exercised on a device, and extension handlers are declarative by design (D43).
-- **Naming.** The project ships as Rivo (`0.8.7-rivo.2`,
+- **Naming.** The project ships as Rivo (`0.8.7-rivo.4`,
   `io.github.iseaprojects.rivo`, `rivo://`); the upstream yt-x name and repository stay in
   the about screen and README as the credit for the port.
-- **Tests.** 344 unit test cases in 39 suites, 0 failures, 7 opt-in live tests skipped
+- **Tests.** 371 unit test cases in 41 suites, 0 failures, 7 opt-in live tests skipped
   (`RIVO_LIVE=1`), in both flavors. `lintFastDebug` reports 0 errors and 19 justified warnings.
-- **Strings.** `tools/check_strings.py` reports 419 referenced, 542 defined, 0 missing; the
+- **Strings.** `tools/check_strings.py` reports 420 referenced, 543 defined, 0 missing; the
   three lang packs parse as JSON.
 - **Install.** `0.8.7-rivo.2-fast-debug` and `0.8.7-rivo.2-ytdlp-debug` both install
   and launch as `io.github.iseaprojects.rivo.debug` on Pixel_8_API_36; the root breadcrumb

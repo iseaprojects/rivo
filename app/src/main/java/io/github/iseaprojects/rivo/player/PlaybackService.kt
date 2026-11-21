@@ -39,10 +39,12 @@ import kotlinx.coroutines.cancel
  * it does not interrupt playback unless `CONFIG_DISOWN_PLAYER` is off, which is the
  * upstream `--disown-player` switch.
  *
- * Two things need extraction results and therefore travel as custom commands: a new queue
- * ([PlayerCommands.SET_QUEUE]) and a stream rebuild after the user picks another quality
- * or audio track ([PlayerCommands.SET_STREAM]). Resolving happens in [PlaybackCoordinator]
- * off the main thread so the session never blocks on the network.
+ * Three things need extraction results and therefore travel as custom commands: a new queue
+ * ([PlayerCommands.SET_QUEUE]), a stream rebuild after the user picks another quality or
+ * audio track ([PlayerCommands.SET_STREAM]), and "advance past the prefetch window"
+ * ([PlayerCommands.NEXT]), which has to resolve the next item before the player can move to
+ * it. Resolving happens in [PlaybackCoordinator] off the main thread so the session never
+ * blocks on the network.
  */
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaSessionService() {
