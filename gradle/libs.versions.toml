@@ -2,7 +2,7 @@
 # Toolchain: AGP 9 uses built-in Kotlin, so there is no kotlin-android plugin.
 # Kotlin itself is pinned in the root build file because AGP would otherwise use
 # the KGP it bundles (2.2.10) instead of the newest stable compiler.
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
 ksp = "2.3.14"
 composeBom = "2026.09.00"
