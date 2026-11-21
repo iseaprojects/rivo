@@ -36,12 +36,16 @@ object CacheCleaner {
         root.listFiles()?.forEach { entry ->
             if (entry.name in keep) return@forEach
             if (entry.isDirectory) {
+                // Read the timestamp *before* recursing. Deleting a child bumps the
+                // directory's own mtime to now, so the old check against `cutoff` after the
+                // sweep never matched and empty directories were left behind for good.
+                val modified = entry.lastModified()
                 val nested = sweep(entry, cutoff, emptySet())
                 files += nested.files
                 directories += nested.directories
                 bytes += nested.bytes
                 // An empty directory left behind by deleted files is itself clutter.
-                if (entry.listFiles()?.isEmpty() == true && entry.lastModified() < cutoff) {
+                if (entry.listFiles()?.isEmpty() == true && modified < cutoff) {
                     if (runCatching { entry.delete() }.getOrDefault(false)) directories++
                 }
             } else if (entry.lastModified() < cutoff) {

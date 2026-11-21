@@ -106,11 +106,23 @@ class AppGraph(context: Context) {
      * GitHub release state. `UPDATE_MANIFEST` names the Rivo repository; the
      * Android build has no release feed of its own, so the row can only report which
      * upstream release the port was based on and what has landed since.
+     *
+     * The "last checked" stamp lives in preferences rather than in the repository's
+     * state so the six-hour window survives a cold start; that is what keeps automatic
+     * checks to one per window instead of one per launch.
      */
     val updates: UpdateRepository = UpdateRepository(
         config = { runtime.snapshot.value },
         scope = scope,
+        lastUpToDateCheck = { updatePrefs.getLong(KEY_LAST_UP_TO_DATE, 0L) },
+        rememberUpToDateCheck = { at ->
+            updatePrefs.edit().putLong(KEY_LAST_UP_TO_DATE, at).apply()
+        },
     )
+
+    private val updatePrefs by lazy {
+        appContext.getSharedPreferences(PREFS_UPDATE, Context.MODE_PRIVATE)
+    }
 
     /**
      * Local library. The database is created lazily by Room on first query, so building it
@@ -392,6 +404,10 @@ class AppGraph(context: Context) {
 
     private companion object {
         const val TAG = "rivo"
+
+        /** Preferences file for the update checker's cross-process throttle. */
+        const val PREFS_UPDATE = "rivo-updates"
+        const val KEY_LAST_UP_TO_DATE = "lastUpToDateCheck"
 
         /**
          * Rows kept in the search-history table and shown in the history menu. Upstream

@@ -122,8 +122,10 @@ class FakeLibraryDao : LibraryDao {
     override suspend fun playlistItems(id: Long): List<PlaylistItemEntity> =
         items.value.filter { it.playlistId == id }.sortedBy { it.position }
 
-    override suspend fun deletePlaylistItem(id: Long, key: String) {
+    override suspend fun deletePlaylistItem(id: Long, key: String): Int {
+        val before = items.value.size
         items.value = items.value.filterNot { it.playlistId == id && it.key == key }
+        return before - items.value.size
     }
 
     // -- search history -------------------------------------------------------------
@@ -173,6 +175,11 @@ class FakeLibraryDao : LibraryDao {
 
     override suspend fun deleteSubscription(channelKey: String) {
         subscription.value = subscription.value.filterNot { it.channelKey == channelKey }
+    }
+
+    override suspend fun deleteSubscriptions(channelKeys: List<String>) {
+        val doomed = channelKeys.toSet()
+        subscription.value = subscription.value.filterNot { it.channelKey in doomed }
     }
 
     override suspend fun clearSubscriptions() {

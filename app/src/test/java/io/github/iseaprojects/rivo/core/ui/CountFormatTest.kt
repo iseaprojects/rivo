@@ -36,4 +36,21 @@ class CountFormatTest {
         assertEquals("", CountFormat.compact(null))
         assertEquals("", CountFormat.compact(-5))
     }
+
+    @Test
+    fun `sizes pick the unit after rounding`() {
+        assertEquals("999 B", CountFormat.bytes(999))
+        assertEquals("1 kB", CountFormat.bytes(1_000))
+        assertEquals("999.9 kB", CountFormat.bytes(999_949))
+        assertEquals("1 MB", CountFormat.bytes(999_999))
+        assertEquals("1 MB", CountFormat.bytes(1_000_000))
+        assertEquals("1.5 GB", CountFormat.bytes(1_500_000_000))
+    }
+
+    @Test
+    fun `absent sizes are empty`() {
+        assertEquals("", CountFormat.bytes(null))
+        assertEquals("", CountFormat.bytes(0))
+        assertEquals("", CountFormat.bytes(-1))
+    }
 }

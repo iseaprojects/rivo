@@ -127,16 +127,16 @@ class DownloadRepository(
     }
 
     /**
-     * Pausing a queued row is just a state change; pausing a running one has to stop the
-     * worker first, or its completion would flip the row back to `DONE`.
+     * Pausing writes the state before stopping the worker, for two reasons: the list
+     * reacts immediately instead of waiting for the service, and a resume tapped in the
+     * same second cannot be overwritten by the pause's own state write landing late.
      */
     suspend fun pause(id: String) {
         val running = store.tasks.value.firstOrNull { it.id == id }?.state == DownloadState.RUNNING
-        if (running) {
-            DownloadService.pause(context, id)
-        } else {
-            store.update(id) { it.copy(state = DownloadState.PAUSED) }
+        store.update(id) {
+            if (it.state == DownloadState.DONE) it else it.copy(state = DownloadState.PAUSED)
         }
+        if (running) DownloadService.pause(context, id)
         store.clearProgress(id)
     }
 

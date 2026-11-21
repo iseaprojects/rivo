@@ -15,6 +15,7 @@ import io.github.iseaprojects.rivo.core.config.ConfigKeys
 import io.github.iseaprojects.rivo.data.extract.ExtractorException
 import io.github.iseaprojects.rivo.data.extract.SponsorSegment
 import io.github.iseaprojects.rivo.data.extract.VideoDetails
+import io.github.iseaprojects.rivo.data.library.LibraryLimits
 import io.github.iseaprojects.rivo.di.AppGraph
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Owns the queue that a [PlaybackRequest] describes.
@@ -47,12 +51,14 @@ class PlaybackCoordinator(
     private val sponsorBlock = SponsorBlockClient()
     private val queue = mutableListOf<QueueItem>()
     private val retried = mutableSetOf<String>()
+    private val retrying = mutableSetOf<String>()
 
     private var mode: PlayMode = PlayMode.VIDEO
     private var qualityHeight: Int? = null
     private var audioTrack: String? = null
     private var generation = 0
-    private var prefetching = false
+    /** Serialises prefetch passes; see [prefetch]. */
+    private val prefetchLock = Mutex()
     private var currentSegments: List<SponsorSegment> = emptyList()
     private var lastSkipped: SponsorSegment? = null
     private var watcher: Job? = null
@@ -78,6 +84,7 @@ class PlaybackCoordinator(
         detailsById.clear()
         segmentsById.clear()
         retried.clear()
+        retrying.clear()
         currentSegments = emptyList()
         lastSkipped = null
 
@@ -146,6 +153,7 @@ class PlaybackCoordinator(
         detailsById.clear()
         segmentsById.clear()
         retried.clear()
+        retrying.clear()
         currentSegments = emptyList()
         lastSkipped = null
         player.stop()
@@ -177,15 +185,65 @@ class PlaybackCoordinator(
         }
     }
 
+    /**
+     * Advances to the next item, waiting for the prefetch when the next item is not in the
+     * window yet.
+     *
+     * The player can only advance to an item it already holds, and the window holds one
+     * item ahead at most: pressing Next during the first seconds of a playlist used to do
+     * nothing at all.
+     */
+    fun skipToNext() {
+        if (player.hasNextMediaItem()) {
+            player.seekToNextMediaItem()
+            return
+        }
+        val gen = generation
+        scope.launch {
+            prefetch(gen)
+            if (gen == generation && player.hasNextMediaItem()) player.seekToNextMediaItem()
+        }
+    }
+
     fun onPlayerError(error: PlaybackException) {
         val index = player.currentMediaItemIndex
         val item = queue.getOrNull(index)
-        val retryable = error.errorCode in RETRYABLE_ERRORS
-        if (item != null && localUri(item.url) == null && retryable && retried.add(item.id)) {
-            scope.launch { retryWithFreshUrl(index, item) }
+        val failed = error.message ?: "Playback failed"
+        if (item == null) {
+            reportError(failed)
+            skipPastFailure()
             return
         }
-        reportError(error.message ?: "Playback failed")
+        // One recovery per item, and only a *successful* one is remembered: adding the id
+        // up front meant a retry that failed to even resolve a fresh URL burned the budget
+        // for the rest of the item.
+        val canRetry = localUri(item.url) == null &&
+            error.errorCode in RETRYABLE_ERRORS &&
+            item.id !in retried &&
+            retrying.add(item.id)
+        if (!canRetry) {
+            reportError(failed)
+            skipPastFailure()
+            return
+        }
+        scope.launch {
+            val recovered = try {
+                retryWithFreshUrl(index, item)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } finally {
+                retrying -= item.id
+            }
+            if (recovered) {
+                retried += item.id
+            } else {
+                skipPastFailure()
+            }
+        }
+    }
+
+    /** Moves to the next item after a failure, or parks instead of freezing in an error. */
+    private fun skipPastFailure() {
         if (player.hasNextMediaItem()) {
             player.seekToNextMediaItem()
             player.play()
@@ -194,27 +252,28 @@ class PlaybackCoordinator(
         }
     }
 
-    private suspend fun prefetch(gen: Int) {
-        // Two triggers (start + item transition) can overlap; the window is a single
-        // append-only pass, so a second concurrent run would double-add.
-        if (prefetching) return
-        prefetching = true
-        try {
-            while (gen == generation) {
-                val next = player.mediaItemCount
-                if (next >= queue.size) return
-                if (next > player.currentMediaItemIndex + PREFETCH_AHEAD) return
-                val mediaItem = resolve(next, gen)
-                if (gen != generation) return
-                if (mediaItem == null) {
-                    // A dead item (private, removed, geo-blocked) must not stall the queue.
-                    if (next < queue.size) queue.removeAt(next) else return
-                    continue
-                }
-                player.addMediaItem(mediaItem)
+    /**
+     * Appends the next items up to [PREFETCH_AHEAD].
+     *
+     * A mutex rather than a "busy" flag: the flag made an overlapping caller return
+     * immediately, so an end-of-item or Next arriving during an in-flight pass found
+     * nothing to advance to and the queue sat at `STATE_ENDED` until the user tapped
+     * again. Waiting for the pass and then running one more is exactly what the caller
+     * wanted.
+     */
+    private suspend fun prefetch(gen: Int) = prefetchLock.withLock {
+        while (gen == generation) {
+            val next = player.mediaItemCount
+            if (next >= queue.size) return@withLock
+            if (next > player.currentMediaItemIndex + PREFETCH_AHEAD) return@withLock
+            val mediaItem = resolve(next, gen)
+            if (gen != generation) return@withLock
+            if (mediaItem == null) {
+                // A dead item (private, removed, geo-blocked) must not stall the queue.
+                if (next < queue.size) queue.removeAt(next) else return@withLock
+                continue
             }
-        } finally {
-            prefetching = false
+            player.addMediaItem(mediaItem)
         }
     }
 
@@ -234,7 +293,7 @@ class PlaybackCoordinator(
         }
         if (gen != generation) return null
         detailsById[item.id] = details
-        loadSponsors(item, details)
+        loadSponsors(item)
         return buildItem(item, details)
     }
 
@@ -350,24 +409,26 @@ class PlaybackCoordinator(
         return runCatching { Uri.parse(url) }.getOrNull()
     }
 
-    private fun loadSponsors(item: QueueItem, details: VideoDetails) {
+    /**
+     * Fetches the sponsor segments for an item, bounded so a slow API cannot delay the
+     * start of playback.
+     *
+     * This runs *before* [buildItem]: the segments travel in the item's extras, which is
+     * what the timeline draws, and a fire-and-forget lookup meant the item was built with
+     * an empty list that was never rebuilt when the answer arrived.
+     */
+    private suspend fun loadSponsors(item: QueueItem): List<SponsorSegment> {
         val config = graph.runtime.snapshot.value
-        if (!config.bool(ConfigKeys.SPONSORBLOCK, true)) return
+        if (!config.bool(ConfigKeys.SPONSORBLOCK, true)) return emptyList()
         // NewPipe's `streamSegments` are chapters, not SponsorBlock categories (D37); the
         // API remains the only source of sponsor segments.
         val categories = config.list(ConfigKeys.SPONSORBLOCK_CATEGORIES)
             .ifEmpty { DEFAULT_CATEGORIES }
-        scope.launch {
-            val result = runCatching { sponsorBlock.segments(item.id, categories) }
-                .getOrDefault(emptyList())
-            if (result.isEmpty()) return@launch
-            segmentsById[item.id] = result
-            if (player.currentMediaItemIndex >= 0 &&
-                queue.getOrNull(player.currentMediaItemIndex)?.id == item.id
-            ) {
-                currentSegments = result
-            }
-        }
+        val result = runCatching {
+            withTimeoutOrNull(SPONSOR_WAIT_MS) { sponsorBlock.segments(item.id, categories) }
+        }.getOrNull().orEmpty()
+        if (result.isNotEmpty()) segmentsById[item.id] = result
+        return result
     }
 
     private fun maybeSkipSponsor() {
@@ -385,31 +446,38 @@ class PlaybackCoordinator(
         player.seekTo(player.currentMediaItemIndex, end + SPONSOR_MARGIN_MS)
     }
 
-    private suspend fun retryWithFreshUrl(index: Int, item: QueueItem) {
+    private suspend fun retryWithFreshUrl(index: Int, item: QueueItem): Boolean {
         val details = try {
             graph.extractors.fresh(item.url)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Throwable) {
             reportError(error.message ?: "Playback failed")
-            return
+            return false
         }
         detailsById[item.id] = details
-        val mediaItem = buildItem(item, details) ?: return
+        val mediaItem = buildItem(item, details)
+        if (mediaItem == null) {
+            reportError("Playback failed")
+            return false
+        }
         val position = player.currentPosition.coerceAtLeast(0)
         // The queue may have shifted while the request was in flight.
         val current = queue.indexOf(item).takeIf { it >= 0 } ?: index
-        if (current >= player.mediaItemCount) return
+        if (current >= player.mediaItemCount) return false
         player.replaceMediaItem(current, mediaItem)
         player.prepare()
         player.seekTo(current, position)
         player.playWhenReady = true
+        return true
     }
 
     private fun recordRecent(item: QueueItem) {
         val limit = graph.runtime.snapshot.value
             .int(ConfigKeys.NO_OF_RECENT, 10)
-            .coerceIn(1, 100)
+            // Same ceiling the browse screen reads with. A local 100 here trimmed the table
+            // behind a configured 200 the first time a video was played.
+            .coerceIn(1, LibraryLimits.RECENTS_CEILING)
         scope.launch {
             runCatching { graph.library.recordRecent(item.toSummary(), limit) }
         }
@@ -428,6 +496,9 @@ class PlaybackCoordinator(
         const val SPONSOR_POLL_MS = 400L
         const val SPONSOR_UNKNOWN_END_MS = 1000L
         const val SPONSOR_MARGIN_MS = 200L
+
+        /** Longest a segment lookup may delay the item being prepared. */
+        const val SPONSOR_WAIT_MS = 1_500L
         val DEFAULT_CATEGORIES = listOf("sponsor", "selfpromo", "interaction")
 
         val RETRYABLE_ERRORS = setOf(

@@ -99,21 +99,6 @@ class PlaybackActions(private val graph: AppGraph) {
     suspend fun playMix(context: Context, media: MediaSummary, mode: PlayMode): LaunchOutcome =
         playPlaylist(context, media.mixPlaylist(), mode)
 
-    /** Queue for an already-loaded set of items, e.g. a local playlist or saved videos. */
-    fun playItems(
-        context: Context,
-        items: List<MediaSummary>,
-        mode: PlayMode,
-        title: String,
-    ): LaunchOutcome {
-        if (items.isEmpty()) return LaunchOutcome.Failed(EMPTY_PLAYLIST)
-        PlayerIntents.open(
-            context,
-            request(items.map { it.toQueueItem() }, mode = mode, title = title),
-        )
-        return LaunchOutcome.Started
-    }
-
     /** Deep links and shared URLs: resolve first, then watch or queue the whole playlist. */
     suspend fun playUrl(context: Context, url: String, mode: PlayMode): LaunchOutcome =
         when (val target = MediaLinkResolver.resolve(graph.extractors, url)) {

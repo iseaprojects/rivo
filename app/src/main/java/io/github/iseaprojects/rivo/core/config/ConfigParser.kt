@@ -14,7 +14,7 @@ object ConfigParser {
 
     fun parse(text: String): LinkedHashMap<String, String> {
         val values = LinkedHashMap<String, String>()
-        text.lineSequence().forEach { raw ->
+        text.removePrefix("\uFEFF").lineSequence().forEach { raw ->
             val line = raw.trim()
             if (line.isEmpty() || line.startsWith("#")) return@forEach
             val body = if (line.startsWith("export ")) line.removePrefix("export ").trim() else line
@@ -31,18 +31,37 @@ object ConfigParser {
         if (raw.length >= 2) {
             val first = raw.first()
             val last = raw.last()
-            if (first == '"' && last == '"') {
-                return raw.substring(1, raw.length - 1)
-                    .replace("\\n", "\n")
-                    .replace("\\t", "\t")
-                    .replace("\\\"", "\"")
-                    .replace("\\\\", "\\")
-            }
-            if (first == '\'' && last == '\'') {
-                return raw.substring(1, raw.length - 1)
-            }
+            if (first == '"' && last == '"') return decode(raw.substring(1, raw.length - 1))
+            if (first == '\'' && last == '\'') return raw.substring(1, raw.length - 1)
         }
         return raw
+    }
+
+    /**
+     * One left-to-right pass over the escapes [renderValue] writes.
+     *
+     * Chained `replace` calls get this wrong: `"a b\\n"` (a backslash followed by an `n`)
+     * has its `\n` decoded first, so the value comes back with a newline in it.
+     */
+    private fun decode(body: String): String {
+        val out = StringBuilder(body.length)
+        var index = 0
+        while (index < body.length) {
+            val char = body[index]
+            if (char == '\\' && index + 1 < body.length) {
+                when (body[index + 1]) {
+                    'n' -> { out.append('\n'); index += 2 }
+                    't' -> { out.append('\t'); index += 2 }
+                    '"' -> { out.append('"'); index += 2 }
+                    '\\' -> { out.append('\\'); index += 2 }
+                    else -> { out.append(char); index++ }
+                }
+            } else {
+                out.append(char)
+                index++
+            }
+        }
+        return out.toString()
     }
 
     fun renderValue(value: String): String {
@@ -127,7 +146,9 @@ class ConfigDocument private constructor(private val lines: MutableList<String>)
 
     companion object {
         fun parse(text: String): ConfigDocument {
-            val normalized = text.replace("\r\n", "\n").replace('\r', '\n')
+            // A BOM from a desktop editor would otherwise glue itself to the first key,
+            // which then read as unknown and got a duplicate default appended below it.
+            val normalized = text.removePrefix("\uFEFF").replace("\r\n", "\n").replace('\r', '\n')
             return ConfigDocument(normalized.split('\n').toMutableList())
         }
 

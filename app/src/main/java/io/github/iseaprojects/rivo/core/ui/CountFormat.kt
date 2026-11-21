@@ -22,13 +22,16 @@ object CountFormat {
      * File sizes with the units Android's own download UI uses (1000-based). Zero and
      * negative mean "the server did not say", which is better left blank than shown as
      * "0 MB".
+     *
+     * The unit is chosen after rounding, not before: a 999 999-byte file used to be divided
+     * once (999.999 kB) and then rounded up to "1000 kB" instead of "1 MB".
      */
     fun bytes(value: Long?): String {
         if (value == null || value <= 0) return ""
         val units = listOf("B", "kB", "MB", "GB", "TB")
         var size = value.toDouble()
         var unit = 0
-        while (size >= 1000 && unit < units.lastIndex) {
+        while (unit < units.lastIndex && Math.round(size * 10.0) >= 10_000L) {
             size /= 1000
             unit++
         }

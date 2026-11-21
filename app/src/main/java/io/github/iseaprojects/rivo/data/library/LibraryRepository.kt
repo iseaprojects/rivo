@@ -202,9 +202,12 @@ class LibraryRepository(
     }
 
     suspend fun removeFromPlaylist(id: Long, media: MediaSummary) = withContext(dispatcher) {
-        dao.deletePlaylistItem(id, media.libraryKey())
-        dao.touchPlaylist(id, clock())
-        changed()
+        // Only a real removal is an edit: touching the timestamp on a no-op sorted the
+        // playlist to the top of the list for nothing.
+        if (dao.deletePlaylistItem(id, media.libraryKey()) > 0) {
+            dao.touchPlaylist(id, clock())
+            changed()
+        }
     }
 
     suspend fun playlistTitle(id: Long): String? = withContext(dispatcher) {
@@ -274,13 +277,23 @@ class LibraryRepository(
      * Sync replaces the local list with the account's, as upstream's sync does. An empty
      * [channels] list is a no-op, so a failed or signed-out extraction cannot silently
      * wipe the subscriptions the user added by hand.
+     *
+     * The inserts land before the deletes. Clearing first — which is what this did — meant
+     * that a process death between the two steps left the table empty, and the promise
+     * above was false. An interrupted sync now leaves a superset: a few stale rows the next
+     * sync removes, nothing lost.
      */
     suspend fun replaceSubscriptions(channels: List<ChannelSummary>): Int = withContext(dispatcher) {
         val unique = channels.distinctBy { it.libraryKey() }
         if (unique.isEmpty()) return@withContext 0
-        dao.clearSubscriptions()
         val now = clock()
         unique.forEach { channel -> dao.upsertSubscription(channel.toSubscription(now)) }
+        val keep = unique.mapTo(HashSet(unique.size)) { it.libraryKey() }
+        dao.subscriptions()
+            .map { it.channelKey }
+            .filterNot { it in keep }
+            .chunked(DELETE_CHUNK)
+            .forEach { stale -> dao.deleteSubscriptions(stale) }
         changed()
         unique.size
     }
@@ -314,5 +327,13 @@ class LibraryRepository(
 
     private fun changed() {
         _changes.tryEmit(Unit)
+    }
+
+    private companion object {
+        /**
+         * SQLite's default limit is 999 bound variables per statement; a channel list
+         * larger than that has to be deleted in pieces.
+         */
+        const val DELETE_CHUNK = 500
     }
 }

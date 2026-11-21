@@ -196,6 +196,15 @@ Status reflects the repository after **F7**.
   instead of ANSI codes, and how long a notification stays is the system's decision, not an
   app setting. They are listed here rather than silently dropped so an imported config keeps
   every line it came with.
+- **`CONFIG_VLC_ARGS` is preserved and inert.** mpv-android takes a documented `args` array;
+  VLC's documented hand-off extras are `title`, `from_start`, `position` (milliseconds) and
+  `subtitles_location`, and it accepts no libVLC options through `ACTION_VIEW`. Rivo sends the
+  three that mean something, so "resume at" and the title survive the handoff, and leaves the
+  option list unapplied rather than inventing an extra VLC ignores.
+- **Handoff to VLC/MX loses the subtitle sidecars.** `subtitles_location` is a local path and
+  the picker's files are remote URLs, so an external hand-off plays without them. Internal
+  playback renders the selected track; downloading the video first keeps the sidecar
+  available because the files then live on the device.
 - **Play Store.** Not distributed there; see the distribution note in the README.
 - **The archive key is `kind<TAB>videoId`, not "kind plus playlist URL".** The playlist a
   video was listed in does not change the file, and keying by it would re-download the same

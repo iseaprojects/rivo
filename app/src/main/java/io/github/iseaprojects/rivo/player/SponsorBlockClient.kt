@@ -57,7 +57,7 @@ class SponsorBlockClient(
             if (!response.isSuccessful) {
                 throw IOException("SponsorBlock HTTP ${response.code}")
             }
-            val body = response.body?.string().orEmpty()
+            val body = response.body.string()
             return parse(body)
         }
     }
@@ -65,12 +65,9 @@ class SponsorBlockClient(
     fun parse(body: String): List<SponsorSegment> {
         val root = runCatching { json.parseToJsonElement(body) as? JsonArray }.getOrNull()
             ?: return emptyList()
-        val entry = root.firstOrNull() ?: return emptyList()
-        val decoded = runCatching {
-            json.decodeFromJsonElement(SponsorBlockEntry.serializer(), entry)
-        }.getOrNull() ?: return emptyList()
-        return decoded.segments.mapNotNull { segment ->
-            if (segment.segment.size < 2) return@mapNotNull null
+        val segments = root.flatMap { element -> segmentsIn(element) }
+        return segments.mapNotNull { segment ->
+            if (segment.segment.size < 2 || segment.category.isBlank()) return@mapNotNull null
             val start = (segment.segment[0] * 1000).toLong()
             val end = (segment.segment[1] * 1000).toLong()
             if (end <= start) return@mapNotNull null
@@ -81,6 +78,26 @@ class SponsorBlockClient(
                 title = segment.category.replaceFirstChar { it.uppercase() },
             )
         }
+    }
+
+    /**
+     * `GET /api/skipSegments?videoID=` answers with a flat array of segment objects, so
+     * every element *is* a segment. Decoding that array as one `{segments: [...]}` entry is
+     * what the first version did, and because the list defaulted to empty it produced no
+     * error and no segments: the whole feature was silently off.
+     *
+     * The grouped shape is still accepted because a cached response or the hash-prefix
+     * endpoint hands out `[{videoID, segments: [...]}]`.
+     */
+    private fun segmentsIn(element: kotlinx.serialization.json.JsonElement): List<SponsorBlockSegment> {
+        val wrapped = runCatching {
+            json.decodeFromJsonElement(SponsorBlockEntry.serializer(), element)
+        }.getOrNull()?.segments.orEmpty()
+        if (wrapped.isNotEmpty()) return wrapped
+        return listOfNotNull(
+            runCatching { json.decodeFromJsonElement(SponsorBlockSegment.serializer(), element) }
+                .getOrNull(),
+        )
     }
 
     @Serializable

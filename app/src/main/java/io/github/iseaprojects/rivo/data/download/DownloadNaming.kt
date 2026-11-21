@@ -47,6 +47,32 @@ object DownloadNaming {
         return "$prefix$base$suffix.${extension.trimStart('.').lowercase()}"
     }
 
+    /**
+     * A name not already in [existing]: the plain one, then ` [<video id>]`, then
+     * ` (2)`, ` (3)` and so on. The loop matters: a second download of the same video
+     * with the archive off used to land on the same `[id]` name and overwrite the file
+     * that was already there.
+     */
+    fun uniqueName(
+        task: DownloadTask,
+        extension: String,
+        enumerate: Int?,
+        existing: Set<String>,
+    ): String {
+        val plain = fileName(task, extension, enumerate)
+        if (plain !in existing) return plain
+        val tagged = fileName(task, extension, enumerate, suffix = " [${task.videoId}]")
+        if (tagged !in existing) return tagged
+        val stem = tagged.substringBeforeLast('.')
+        val suffix = tagged.substringAfterLast('.')
+        var copy = 2
+        while (true) {
+            val candidate = "$stem ($copy).$suffix"
+            if (candidate !in existing) return candidate
+            copy++
+        }
+    }
+
     /** Extension for a stream, from its MIME type then its container. */
     fun extensionFor(mimeType: String?, container: String?, fallback: String = "mp4"): String =
         when {
@@ -77,8 +103,9 @@ object DownloadNaming {
      * A name every filesystem accepts.
      *
      * Reserved names (`.`/`..`) and trailing dots are the two that actually break a
-     * `DocumentFile.createFile`; length is capped so a 300-character title still leaves
-     * room for a directory prefix under Android's 255-byte name limit.
+     * `DocumentFile.createFile`. The cap is in UTF-8 bytes, not characters: Android and
+     * Linux allow 255 bytes per name, and a 100-character title in Japanese is already
+     * 300 bytes, which is exactly the case a character cap misses.
      */
     fun sanitize(raw: String): String {
         val cleaned = buildString(raw.length) {
@@ -91,8 +118,28 @@ object DownloadNaming {
             }
         }
         val collapsed = cleaned.replace(Regex("\\s+"), " ").trim(' ', '.')
-        val capped = if (collapsed.length > MAX_NAME) collapsed.take(MAX_NAME).trim(' ', '.') else collapsed
+        val capped = capToBytes(collapsed).trim(' ', '.')
         return capped.takeUnless { it.isBlank() || it == "." || it == ".." } ?: ""
+    }
+
+    /** Longest prefix of [text] that fits in [MAX_NAME_BYTES] without cutting a code point. */
+    private fun capToBytes(text: String): String {
+        var used = 0
+        var end = 0
+        while (end < text.length) {
+            val char = text[end]
+            val pair = char.isHighSurrogate() && end + 1 < text.length
+            val size = when {
+                pair -> 4
+                char.code < 0x80 -> 1
+                char.code < 0x800 -> 2
+                else -> 3
+            }
+            if (used + size > MAX_NAME_BYTES) break
+            used += size
+            end += if (pair) 2 else 1
+        }
+        return text.substring(0, end)
     }
 
     /** Relative folder for the queue row and the snackbar ("video/individual/Channel"). */
@@ -107,7 +154,12 @@ object DownloadNaming {
     }
 
     private const val UNKNOWN_CHANNEL = "Unknown channel"
-    private const val MAX_NAME = 100
+
+    /**
+     * 180 bytes leaves room for `01 - `, a ` [<video id>]` suffix and `.mp4` inside the
+     * 255-byte limit every Android filesystem enforces.
+     */
+    private const val MAX_NAME_BYTES = 180
 
     private val FORBIDDEN = charArrayOf('/', '\\', ':', '*', '?', '"', '<', '>', '|').toSet()
 

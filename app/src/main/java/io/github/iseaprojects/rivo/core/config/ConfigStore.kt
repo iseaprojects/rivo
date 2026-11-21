@@ -41,7 +41,7 @@ class ConfigStore(context: Context) {
     suspend fun set(key: String, value: String) {
         writeMutex.withLock {
             withContext(Dispatchers.IO) {
-                val document = ConfigDocument.parse(configFile.readText())
+                val document = ConfigDocument.parse(readConfig())
                 document.set(key, value)
                 writeAtomically(configFile, document.render())
                 _state.value = ConfigSnapshot(document.toMap())
@@ -54,7 +54,7 @@ class ConfigStore(context: Context) {
     suspend fun remove(key: String) {
         writeMutex.withLock {
             withContext(Dispatchers.IO) {
-                val document = ConfigDocument.parse(configFile.readText())
+                val document = ConfigDocument.parse(readConfig())
                 document.remove(key)
                 writeAtomically(configFile, document.render())
                 _state.value = ConfigSnapshot(document.toMap())
@@ -125,6 +125,22 @@ class ConfigStore(context: Context) {
     }
 
     private fun readDefaults(): Map<String, String> = ConfigParser.parse(readDefaultAsset())
+
+    /**
+     * The file's text, recreated from the asset when it is missing.
+     *
+     * `files/config` is a document in the app's own provider, and the provider allows
+     * delete because the README tells people to edit it from a desktop. Deleting it used
+     * to make every later `set` throw `FileNotFoundException`, so no setting could be
+     * written until the next process start.
+     */
+    private fun readConfig(): String {
+        val file = configFile
+        if (file.exists()) return file.readText()
+        val text = readDefaultAsset()
+        writeAtomically(file, text)
+        return text
+    }
 
     private fun readDefaultAsset(): String = try {
         appContext.assets.open(DEFAULT_ASSET).bufferedReader().use { it.readText() }

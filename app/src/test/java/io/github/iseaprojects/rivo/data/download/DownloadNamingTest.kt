@@ -121,9 +121,60 @@ class DownloadNamingTest {
     }
 
     @Test
-    fun `long titles are capped so the folder prefix still fits`() {
+    fun `long titles are capped by bytes so the folder prefix still fits`() {
         val name = DownloadNaming.sanitize("x".repeat(300))
-        assertEquals(100, name.length)
+        assertEquals(180, name.length)
+        assertEquals(180, name.toByteArray(Charsets.UTF_8).size)
+    }
+
+    @Test
+    fun `a CJK title is capped by bytes, not characters`() {
+        // 300 characters of three bytes each: a 100-character cap would leave 300 bytes.
+        val name = DownloadNaming.sanitize("漢".repeat(300))
+        assertEquals(60, name.length)
+        assertEquals(180, name.toByteArray(Charsets.UTF_8).size)
+    }
+
+    @Test
+    fun `an emoji is never cut in half`() {
+        val name = DownloadNaming.sanitize("\uD83D\uDE00".repeat(100))
+        assertEquals(180, name.toByteArray(Charsets.UTF_8).size)
+        assertTrue(name.length % 2 == 0)
+    }
+
+    @Test
+    fun `a taken name falls back to the id and then to a counter`() {
+        val taken = setOf("Lo-fi beats.mp4", "Lo-fi beats [abc123].mp4")
+        assertEquals(
+            "Lo-fi beats [abc123] (2).mp4",
+            DownloadNaming.uniqueName(task(), "mp4", enumerate = null, existing = taken),
+        )
+        assertEquals(
+            "Lo-fi beats [abc123] (3).mp4",
+            DownloadNaming.uniqueName(
+                task(),
+                "mp4",
+                enumerate = null,
+                existing = taken + "Lo-fi beats [abc123] (2).mp4",
+            ),
+        )
+    }
+
+    @Test
+    fun `a free name is left alone`() {
+        assertEquals(
+            "Lo-fi beats.mp4",
+            DownloadNaming.uniqueName(task(), "mp4", enumerate = null, existing = emptySet()),
+        )
+        assertEquals(
+            "02 - Lo-fi beats.mp4",
+            DownloadNaming.uniqueName(
+                task(),
+                "mp4",
+                enumerate = 2,
+                existing = setOf("01 - Other.mp4"),
+            ),
+        )
     }
 
     @Test

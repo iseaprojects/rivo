@@ -67,6 +67,14 @@ class MediaListState(
     private var window: PageWindow<MediaEntry>? = null
     private var job: Job? = null
 
+    /**
+     * Id of the newest request. Cancellation is cooperative, so a job that already returned
+     * from the loader can still reach its `publish` after a newer request started; without
+     * this check two quick taps on Next fetched twice and issued two pages from the buffer,
+     * which reads as a skipped page.
+     */
+    private var request = 0
+
     /** True once a request has completed, so "empty" can be told apart from "not yet". */
     var loadedOnce by mutableStateOf(false)
         private set
@@ -114,6 +122,7 @@ class MediaListState(
     private fun reset() {
         job?.cancel()
         job = null
+        request++
         token = null
         window = PageWindow(pageSize()) { it.key }
         rows = emptyList()

@@ -98,8 +98,9 @@ interface LibraryDao {
     @Query("SELECT * FROM playlist_item WHERE playlistId = :id ORDER BY position ASC")
     suspend fun playlistItems(id: Long): List<PlaylistItemEntity>
 
+    /** Rows removed, so a no-op removal does not bump the playlist's `updatedAt`. */
     @Query("DELETE FROM playlist_item WHERE playlistId = :id AND key = :key")
-    suspend fun deletePlaylistItem(id: Long, key: String)
+    suspend fun deletePlaylistItem(id: Long, key: String): Int
 
     // -- search history -------------------------------------------------------------
 
@@ -143,6 +144,10 @@ interface LibraryDao {
 
     @Query("DELETE FROM subscription WHERE channelKey = :channelKey")
     suspend fun deleteSubscription(channelKey: String)
+
+    /** Bulk delete used by a sync; the caller chunks the list under SQLite's limit. */
+    @Query("DELETE FROM subscription WHERE channelKey IN (:channelKeys)")
+    suspend fun deleteSubscriptions(channelKeys: List<String>)
 
     @Query("DELETE FROM subscription")
     suspend fun clearSubscriptions()

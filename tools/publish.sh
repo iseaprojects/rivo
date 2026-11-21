@@ -10,7 +10,9 @@
 #
 # Assets are copied out of the Gradle output into build/release under their published names
 # before upload. `gh release create file#name` does not rename on every gh version, so the
-# copy is what guarantees the names users see.
+# copy is what guarantees the names users see. The directory is emptied first and the upload
+# names the two expected files explicitly: a leftover APK from the previous release once
+# ended up attached to the next one.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -59,14 +61,34 @@ else
 fi
 
 mkdir -p "$out"
+# Start from an empty output directory: a previous release leaves its APKs here, and
+# uploading "$out"/*.apk once attached the old version's files to the new release.
+rm -f "$out"/*.apk
+assets=()
 for flavor in fast ytdlp; do
+    found=""
     for apk in "app/build/outputs/apk/$flavor/release/"*.apk; do
         [[ -f "$apk" ]] || continue
-        target="$out/rivo-$version-$flavor.apk"
-        cp "$apk" "$target"
-        echo "packed: $target"
+        # An unsigned build also lands here; it must never be published as the flavor.
+        if [[ -z "${RIVO_KEYSTORE:-}" && "$apk" == *-unsigned.apk ]]; then
+            found="$apk"
+        elif [[ -n "${RIVO_KEYSTORE:-}" && "$apk" != *-unsigned.apk ]]; then
+            found="$apk"
+        fi
     done
+    if [[ -z "$found" ]]; then
+        echo "error: no release APK for the $flavor flavor" >&2
+        exit 1
+    fi
+    target="$out/rivo-$version-$flavor.apk"
+    cp "$found" "$target"
+    assets+=("$target")
+    echo "packed: $target"
 done
+if [[ ${#assets[@]} -ne 2 ]]; then
+    echo "error: expected two assets, got ${#assets[@]}" >&2
+    exit 1
+fi
 
 if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
     echo "==> tag $tag already exists"
@@ -74,19 +96,18 @@ else
     git tag -a "$tag" -m "Rivo $version"
     echo "==> tag $tag created"
 fi
-git push origin main
 git push origin "$tag"
 
 if gh release view "$tag" >/dev/null 2>&1; then
     echo "==> release $tag exists; replacing assets"
-    gh release upload "$tag" "$out"/*.apk --clobber
+    gh release upload "$tag" "${assets[@]}" --clobber
 else
     if [[ -f "$notes" ]]; then
-        gh release create "$tag" "$out"/*.apk \
+        gh release create "$tag" "${assets[@]}" \
             --title "Rivo $version" --notes-file "$notes" --latest
     else
         echo "note: $notes is missing; GitHub will generate the notes" >&2
-        gh release create "$tag" "$out"/*.apk \
+        gh release create "$tag" "${assets[@]}" \
             --title "Rivo $version" --generate-notes --latest
     fi
 fi

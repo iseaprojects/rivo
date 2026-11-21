@@ -178,7 +178,11 @@ object LaunchSpecParser {
                 return@forEach
             }
             val configKey = ConfigKeys.keyForOverride(key) ?: return@forEach
-            result[configKey] = value.toString()
+            // `RIVO_NO_PREVIEW` and `RIVO_NO_PREVIEW_IMAGES` are the negated spellings of the
+            // two `CONFIG_ENABLE_*` keys. Copying the value verbatim turned "no previews"
+            // into "previews"; the alias has to invert it.
+            val negated = key.removePrefix("RIVO_").removePrefix("YT_X_").startsWith("NO_")
+            result[configKey] = if (negated) (!truthy(value)).toString() else value.toString()
         }
         val blob = extras["RIVO_CONFIG"] as? String
         if (!blob.isNullOrBlank()) {
